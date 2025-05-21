@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fuck/widgets/add_category.dart';
+import 'package:fuck/widgets/add_product.dart';
 
 class FloatingButton extends StatelessWidget {
   const FloatingButton({super.key});
@@ -11,8 +11,13 @@ class FloatingButton extends StatelessWidget {
         context: context,
         builder:
             (ctx) => AlertDialog(
-              content: AddCategory(),
-              contentPadding: const EdgeInsets.all(20),
+              title: Directionality(
+                textDirection: TextDirection.rtl,
+                child: Text('افزودن بافتنی'),
+              ),
+              titlePadding: EdgeInsets.only(bottom: 24),
+              content: AddProduct(),
+              contentPadding: const EdgeInsets.all(8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
