@@ -21,7 +21,7 @@ class _ImageInputState extends State<ImageInput> {
     final imagePicker = ImagePicker();
     final pickedImage = await imagePicker.pickImage(
       source: ImageSource.camera,
-      maxWidth: 600,
+      maxWidth: 250,
     );
 
     if (pickedImage == null) {
@@ -39,18 +39,21 @@ class _ImageInputState extends State<ImageInput> {
   Widget build(BuildContext context) {
     Widget content = TextButton.icon(
       onPressed: _takePicture,
-      label: Text('Take picture!'),
+      label: Text('عکس بگیرید'),
       icon: Icon(Icons.camera),
     );
 
     if (_selectedImage != null) {
       content = GestureDetector(
         onTap: _takePicture,
-        child: Image.file(
-          _selectedImage!,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
+        child: ClipRRect(
+          clipBehavior: Clip.hardEdge,
+          borderRadius: BorderRadius.circular(10),
+          child: SizedBox(
+            width: double.infinity,
+            height: 250,
+            child: Image.file(_selectedImage!, fit: BoxFit.cover),
+          ),
         ),
       );
     }
