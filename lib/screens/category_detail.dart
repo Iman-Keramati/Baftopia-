@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fuck/data/category_data.dart';
 import 'package:fuck/models/category.dart';
 import 'package:fuck/models/product.dart';
+import 'package:fuck/provider/product_provider.dart';
+import 'package:fuck/widgets/floating_button.dart';
 
-class CategoryDetailScreen extends StatelessWidget {
+class CategoryDetailScreen extends ConsumerWidget {
   const CategoryDetailScreen({super.key, required this.category});
 
   final Category category;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     Widget content = Center(
       child: const Text('بافتنی ای در این دسته بندی وجود ندارد'),
     );
 
-    final products = ProductManager().getCategoryProducts(category);
+    final products =
+        ref
+            .watch(productProvider)
+            .where((prod) => prod.category.persianTitle == category.title)
+            .toList();
 
     if (products.isNotEmpty) {
       content = Directionality(
@@ -39,7 +47,7 @@ class CategoryDetailScreen extends StatelessWidget {
               title: Text(product.title, style: TextStyle(fontSize: 20)),
               subtitle: Text(product.dificulty.title),
               trailing: Text(
-                'مدت زمان بافت: ${product.startDate.difference(product.endDate).inHours} روز',
+                'مدت زمان بافت: ${product.endDate.difference(product.startDate).inDays < 1 ? '${product.endDate.difference(product.startDate).inHours} ساعت' : '${product.endDate.difference(product.startDate).inDays} روز'}',
               ),
             );
           },
@@ -47,6 +55,15 @@ class CategoryDetailScreen extends StatelessWidget {
         ),
       );
     }
-    return Scaffold(appBar: AppBar(title: Text(category.title)), body: content);
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [Text(category.title)],
+        ),
+      ),
+      body: content,
+      floatingActionButton: FloatingButton(),
+    );
   }
 }

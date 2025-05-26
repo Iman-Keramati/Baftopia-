@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fuck/screens/welcome.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 final theme = ThemeData(

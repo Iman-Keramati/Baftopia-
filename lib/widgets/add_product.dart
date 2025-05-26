@@ -1,20 +1,22 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fuck/data/category_data.dart';
 import 'package:fuck/models/product.dart';
+import 'package:fuck/provider/product_provider.dart';
 import 'package:fuck/widgets/image_input.dart';
 import 'package:fuck/widgets/persian_date_picker.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 
-class AddProduct extends StatefulWidget {
+class AddProduct extends ConsumerStatefulWidget {
   const AddProduct({super.key});
 
   @override
-  State<AddProduct> createState() => _AddProductState();
+  ConsumerState<AddProduct> createState() => _AddProductState();
 }
 
-class _AddProductState extends State<AddProduct> {
+class _AddProductState extends ConsumerState<AddProduct> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _nameController = TextEditingController();
@@ -25,6 +27,8 @@ class _AddProductState extends State<AddProduct> {
   File _imageController = File('');
 
   void _onSubmit() {
+    print(_startDateController);
+    print(_endDateController);
     if (_formKey.currentState!.validate()) {
       // Process the data
       final product = Product(
@@ -35,7 +39,7 @@ class _AddProductState extends State<AddProduct> {
         dificulty: _dificultyController,
         category: _categoryController,
       );
-      ProductManager().addProduct(product);
+      ref.read(productProvider.notifier).addProduct(product);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('بافتنی با موفقیت افزوده شد')));
@@ -119,6 +123,7 @@ class _AddProductState extends State<AddProduct> {
                       int.parse(parts[1]),
                       int.parse(parts[2]),
                     );
+
                     final gregorian = jalali.toGregorian();
                     _startDateController = DateTime(
                       gregorian.year,
@@ -140,7 +145,7 @@ class _AddProductState extends State<AddProduct> {
                       int.parse(parts[2]),
                     );
                     final gregorian = jalali.toGregorian();
-                    _startDateController = DateTime(
+                    _endDateController = DateTime(
                       gregorian.year,
                       gregorian.month,
                       gregorian.day,

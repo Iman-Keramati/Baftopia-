@@ -39,6 +39,7 @@ dependencies:
   flutter_jalali_date_picker: ^2.2.4
   shamsi_date: ^1.1.0
   image_picker: ^1.1.2
+  flutter_riverpod: ^2.5.1
 
 dev_dependencies:
   flutter_test:

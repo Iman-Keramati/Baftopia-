@@ -37,27 +37,3 @@ class Product {
   final Dificulty dificulty;
   final CategoryData category;
 }
-
-class ProductManager {
-  ProductManager._privateConstructor();
-
-  static final ProductManager _instance = ProductManager._privateConstructor();
-
-  factory ProductManager() {
-    return _instance;
-  }
-
-  final List<Product> _products = [];
-
-  void addProduct(Product product) {
-    _products.add(product);
-  }
-
-  List<Product> getCategoryProducts(Category category) {
-    return _products
-        .where((product) => product.category.persianTitle == category.title)
-        .toList();
-  }
-
-  List<Product> get allProducts => List.unmodifiable(_products);
-}
