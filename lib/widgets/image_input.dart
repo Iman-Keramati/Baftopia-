@@ -4,9 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ImageInput extends StatefulWidget {
-  const ImageInput({super.key, required this.onPickImage});
+  const ImageInput({
+    super.key,
+    required this.onPickImage,
+    this.imageSelectionType = 'camera',
+  });
 
   final void Function(File image) onPickImage;
+  final String? imageSelectionType;
 
   @override
   State<ImageInput> createState() {
@@ -20,7 +25,10 @@ class _ImageInputState extends State<ImageInput> {
   void _takePicture() async {
     final imagePicker = ImagePicker();
     final pickedImage = await imagePicker.pickImage(
-      source: ImageSource.camera,
+      source:
+          widget.imageSelectionType == 'camera'
+              ? ImageSource.camera
+              : ImageSource.gallery,
       maxWidth: 250,
     );
 
@@ -39,8 +47,18 @@ class _ImageInputState extends State<ImageInput> {
   Widget build(BuildContext context) {
     Widget content = TextButton.icon(
       onPressed: _takePicture,
-      label: Text('عکس بگیرید'),
-      icon: Icon(Icons.camera),
+      label: Text(
+        widget.imageSelectionType == 'camera'
+            ? 'عکس بگیرید'
+            : 'انتخاب از گالری',
+        style: TextStyle(color: Theme.of(context).colorScheme.primary),
+      ),
+      icon: Icon(
+        widget.imageSelectionType == 'camera'
+            ? Icons.camera_alt
+            : Icons.photo_library,
+        color: Theme.of(context).colorScheme.primary,
+      ),
     );
 
     if (_selectedImage != null) {

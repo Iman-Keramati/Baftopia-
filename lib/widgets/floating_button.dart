@@ -1,22 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:fuck/data/category_data.dart';
+import 'package:fuck/widgets/add_category.dart';
 import 'package:fuck/widgets/add_product.dart';
 
 class FloatingButton extends StatelessWidget {
-  const FloatingButton({super.key});
+  const FloatingButton({super.key, required this.defaultCategory});
+
+  final CategoryData defaultCategory;
 
   @override
   Widget build(BuildContext context) {
-    void openDialog() {
+    void openCategoryDialog() {
+      showDialog(
+        context: context,
+        builder:
+            (ctx) => AlertDialog(
+              title: Text('افزودن دسته بندی جدید'),
+              content: AddCategory(),
+            ),
+      );
+    }
+
+    void openProductDialog() {
       showModalBottomSheet(
         context: context,
         builder:
             (ctx) => AlertDialog(
               title: Directionality(
                 textDirection: TextDirection.rtl,
-                child: Text('افزودن بافتنی'),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'بافتنی جدید',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onSecondary,
+                      ),
+                      onPressed: openCategoryDialog,
+                      icon: Icon(Icons.add),
+                      label: Text('افزودن دسته بندی'),
+                    ),
+                  ],
+                ),
               ),
-              titlePadding: EdgeInsets.only(bottom: 24),
-              content: AddProduct(),
+              titlePadding: EdgeInsets.only(bottom: 12),
+              content: AddProduct(defaultCategory: defaultCategory),
               contentPadding: const EdgeInsets.all(8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -28,7 +63,7 @@ class FloatingButton extends StatelessWidget {
     return FloatingActionButton(
       shape: const CircleBorder(),
       backgroundColor: Theme.of(context).colorScheme.onSecondary,
-      onPressed: openDialog,
+      onPressed: openProductDialog,
       child: const Icon(Icons.add),
     );
   }

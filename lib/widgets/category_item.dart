@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:fuck/models/category.dart';
 import 'package:fuck/screens/category_detail.dart';
@@ -33,6 +35,7 @@ class CategoryItem extends StatelessWidget {
                 child: FadeInImage(
                   placeholder: MemoryImage(kTransparentImage),
                   image: AssetImage(category.image),
+
                   fit: BoxFit.cover,
                 ),
               ),

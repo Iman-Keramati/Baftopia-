@@ -4,6 +4,7 @@ import 'package:fuck/data/category_data.dart';
 import 'package:fuck/models/category.dart';
 import 'package:fuck/models/product.dart';
 import 'package:fuck/provider/product_provider.dart';
+import 'package:fuck/utils/persian_number.dart';
 import 'package:fuck/widgets/floating_button.dart';
 
 class CategoryDetailScreen extends ConsumerWidget {
@@ -46,8 +47,24 @@ class CategoryDetailScreen extends ConsumerWidget {
               ),
               title: Text(product.title, style: TextStyle(fontSize: 20)),
               subtitle: Text(product.dificulty.title),
-              trailing: Text(
-                'مدت زمان بافت: ${product.endDate.difference(product.startDate).inDays < 1 ? '${product.endDate.difference(product.startDate).inHours} ساعت' : '${product.endDate.difference(product.startDate).inDays} روز'}',
+              trailing: Text.rich(
+                TextSpan(
+                  text: 'مدت زمان بافت: ',
+                  style: DefaultTextStyle.of(context).style,
+                  children: [
+                    TextSpan(
+                      text:
+                          product.endDate.difference(product.startDate).inDays <
+                                  1
+                              ? '${PersianNumber.toPersian(product.endDate.difference(product.startDate).inHours.toString())} ساعت'
+                              : '${PersianNumber.toPersian(product.endDate.difference(product.startDate).inDays.toString())} روز',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16, // or whatever size turns you on
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -63,7 +80,12 @@ class CategoryDetailScreen extends ConsumerWidget {
         ),
       ),
       body: content,
-      floatingActionButton: FloatingButton(),
+      floatingActionButton: FloatingButton(
+        defaultCategory: CategoryData.values.firstWhere(
+          (cat) => cat.persianTitle == category.title,
+          orElse: () => CategoryData.creativity,
+        ),
+      ),
     );
   }
 }

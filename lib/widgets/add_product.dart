@@ -10,7 +10,9 @@ import 'package:fuck/widgets/persian_date_picker.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 
 class AddProduct extends ConsumerStatefulWidget {
-  const AddProduct({super.key});
+  const AddProduct({super.key, required this.defaultCategory});
+
+  final CategoryData defaultCategory;
 
   @override
   ConsumerState<AddProduct> createState() => _AddProductState();
@@ -21,14 +23,18 @@ class _AddProductState extends ConsumerState<AddProduct> {
 
   final TextEditingController _nameController = TextEditingController();
   Dificulty _dificultyController = Dificulty.beginner;
-  CategoryData _categoryController = CategoryData.creativity;
+  late CategoryData _categoryController;
   DateTime _startDateController = DateTime.now();
   DateTime _endDateController = DateTime.now();
   File _imageController = File('');
 
+  @override
+  void initState() {
+    super.initState();
+    _categoryController = widget.defaultCategory;
+  }
+
   void _onSubmit() {
-    print(_startDateController);
-    print(_endDateController);
     if (_formKey.currentState!.validate()) {
       // Process the data
       final product = Product(
@@ -40,9 +46,22 @@ class _AddProductState extends ConsumerState<AddProduct> {
         category: _categoryController,
       );
       ref.read(productProvider.notifier).addProduct(product);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('بافتنی با موفقیت افزوده شد')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'بافتنی با موفقیت افزوده شد',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          backgroundColor: Colors.green[700], // your custom background color
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(top: 20, left: 20, right: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
       Navigator.of(context).pop(); // Close the form after submission
     }
   }
@@ -55,8 +74,6 @@ class _AddProductState extends ConsumerState<AddProduct> {
         key: _formKey,
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start, // Optional: for layout fix
             children: [
               TextFormField(
                 autofocus: false,
