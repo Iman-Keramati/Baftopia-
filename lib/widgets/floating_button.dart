@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:fuck/data/category_data.dart';
 import 'package:fuck/widgets/add_category.dart';
 import 'package:fuck/widgets/add_product.dart';
 
 class FloatingButton extends StatelessWidget {
-  const FloatingButton({super.key, required this.defaultCategory});
-
-  final CategoryData defaultCategory;
+  const FloatingButton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +48,7 @@ class FloatingButton extends StatelessWidget {
                 ),
               ),
               titlePadding: EdgeInsets.only(bottom: 12),
-              content: AddProduct(defaultCategory: defaultCategory),
+              content: AddProduct(),
               contentPadding: const EdgeInsets.all(8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),

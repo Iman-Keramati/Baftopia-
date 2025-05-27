@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fuck/data/category_data.dart';
 import 'package:fuck/models/category.dart';
 import 'package:fuck/provider/category_Provider.dart';
 import 'package:fuck/widgets/image_input.dart';
+import 'package:uuid/uuid.dart';
 
 class AddCategory extends ConsumerStatefulWidget {
   const AddCategory({super.key});
@@ -24,18 +26,19 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
     });
   }
 
-  void _onSubmit() {
+  void _onSubmit() async {
     if (_formKey.currentState!.validate()) {
       final category = Category(
+        id: const Uuid().v4(),
         title: _titleController.text,
         image: _image!.path,
       );
 
-      ref.read(categoryProvider.notifier).addCategory(category);
-      final currentCategories = ref.read(categoryProvider);
-      print(
-        'Categories after add: ${currentCategories.map((c) => c.title).toList()}',
-      );
+      await CategoryService().addCategory(category);
+      ref.invalidate(categoryProvider);
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -43,7 +46,7 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          backgroundColor: Colors.green[700], // your custom background color
+          backgroundColor: Colors.green[700],
           behavior: SnackBarBehavior.floating,
           margin: EdgeInsets.only(top: 20, left: 20, right: 20),
           shape: RoundedRectangleBorder(
@@ -52,7 +55,7 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
           duration: Duration(seconds: 2),
         ),
       );
-      Navigator.of(context).pop(); // Close the form after submission
+      Navigator.of(context).pop();
     }
   }
 
@@ -88,7 +91,6 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
                 Spacer(),
                 ElevatedButton(
                   onPressed: _onSubmit,
-                  child: Text('افزودن دسته بندی'),
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all(
                       Theme.of(context).colorScheme.onSecondary,
@@ -100,6 +102,7 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
                       ),
                     ),
                   ),
+                  child: Text('افزودن دسته بندی'),
                 ),
               ],
             ),

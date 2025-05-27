@@ -34,7 +34,7 @@ class CategoryItem extends StatelessWidget {
               Positioned.fill(
                 child: FadeInImage(
                   placeholder: MemoryImage(kTransparentImage),
-                  image: AssetImage(category.image),
+                  image: FileImage(File(category.image)),
 
                   fit: BoxFit.cover,
                 ),

@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:fuck/screens/welcome.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+void main() async {
+  await Supabase.initialize(
+    url: 'https://utzofrqnssnjihpvjrsg.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0em9mcnFuc3NuamlocHZqcnNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyNjU1ODksImV4cCI6MjA2Mzg0MTU4OX0._24-lFKT3nPluELVYBM3yD_ZWna3HBV4sPpdlIlNSCk',
+  );
   runApp(const ProviderScope(child: MyApp()));
 }
 

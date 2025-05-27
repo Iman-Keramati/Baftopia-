@@ -1,33 +1,27 @@
 import 'package:fuck/models/category.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-enum CategoryData { escaaj, romizi, farshite, creativity }
+class CategoryService {
+  Future<void> addCategory(Category category) async {
+    final supabase = Supabase.instance.client;
+    final response = await supabase.from('categories').insert({
+      'id': category.id,
+      'title': category.title,
+      'image': category.image,
+    });
 
-extension CategoryDataExtension on CategoryData {
-  String get persianTitle {
-    switch (this) {
-      case CategoryData.escaaj:
-        return 'اسکاج';
-      case CategoryData.romizi:
-        return 'رومیزی';
-      case CategoryData.farshite:
-        return 'فرشینه';
-      case CategoryData.creativity:
-        return 'خلاقیت';
+    if (response == null || response.isEmpty) {
+      throw Exception('Insert failed or returned empty');
     }
   }
 
-  String get image {
-    switch (this) {
-      case CategoryData.escaaj:
-        return 'assets/images/escaj.jpg';
-      case CategoryData.romizi:
-        return 'assets/images/romizi.webp';
-      case CategoryData.farshite:
-        return 'assets/images/farshine.jpg';
-      case CategoryData.creativity:
-        return 'assets/images/creativity.jpg';
+  Future<List<Category>> getCategories() async {
+    final supabase = Supabase.instance.client;
+    try {
+      final List<dynamic> response = await supabase.from('categories').select();
+      return response.map((json) => Category.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch categories: $e');
     }
   }
-
-  Category get asCategory => Category(title: persianTitle, image: image);
 }
