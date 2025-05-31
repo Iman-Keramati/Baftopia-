@@ -10,9 +10,23 @@ import 'package:fuck/provider/product_provider.dart';
 import 'package:fuck/widgets/image_input.dart';
 import 'package:fuck/widgets/persian_date_picker.dart';
 import 'package:shamsi_date/shamsi_date.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 enum Difficulty { beginner, intermediate, advanced }
+
+extension DifficultyExtension on Difficulty {
+  String get persianLabel {
+    switch (this) {
+      case Difficulty.beginner:
+        return 'مبتدی';
+      case Difficulty.intermediate:
+        return 'متوسط';
+      case Difficulty.advanced:
+        return 'پیشرفته';
+    }
+  }
+}
 
 class AddProduct extends ConsumerStatefulWidget {
   const AddProduct({super.key});
@@ -37,6 +51,30 @@ class _AddProductState extends ConsumerState<AddProduct> {
     _categoryController = null;
   }
 
+  Future<String?> uploadImageToSupabase(File imageFile) async {
+    try {
+      final fileBytes = await imageFile.readAsBytes();
+      final fileExt = imageFile.path.split('.').last;
+      final fileName = '${const Uuid().v4()}.$fileExt'; // Unique file name
+      final supabase = Supabase.instance.client;
+
+      // Upload returns String path or throws on error
+      await supabase.storage
+          .from('product-images')
+          .uploadBinary(fileName, fileBytes);
+
+      // Get public URL of the uploaded file
+      final publicUrl = supabase.storage
+          .from('product-images')
+          .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (e) {
+      debugPrint('Supabase upload error: $e');
+      return null;
+    }
+  }
+
   Future<void> _onSubmit() async {
     if (_formKey.currentState!.validate()) {
       if (_imageController == null) {
@@ -46,14 +84,22 @@ class _AddProductState extends ConsumerState<AddProduct> {
         return;
       }
 
+      final imageUrl = await uploadImageToSupabase(_imageController!);
+      if (imageUrl == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('خطا در بارگذاری تصویر')));
+        return;
+      }
+
       final product = ProductModel(
         id: const Uuid().v4(),
         title: _nameController.text.trim(),
-        image: _imageController!.path,
+        image: imageUrl, // now the public URL from Supabase
         startDate: _startDateController,
         endDate: _endDateController,
         difficultyLevel: _difficultyController.name,
-        description: '', // You can add a description field if needed
+        description: '',
         category: _categoryController!,
       );
 
@@ -127,7 +173,7 @@ class _AddProductState extends ConsumerState<AddProduct> {
                             .map(
                               (d) => DropdownMenuItem(
                                 value: d,
-                                child: Text(d.name),
+                                child: Text(d.persianLabel),
                               ),
                             )
                             .toList(),

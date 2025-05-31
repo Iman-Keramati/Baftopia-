@@ -26,7 +26,7 @@ class ProductService {
     try {
       final List<dynamic> response = await supabase
           .from('products')
-          .select('*, category(*)'); // 👈 joins the category
+          .select('*, categories(*)'); // 👈 joins the category
 
       return response
           .map((json) => ProductModel.fromJson(json as Map<String, dynamic>))

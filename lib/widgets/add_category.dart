@@ -6,6 +6,7 @@ import 'package:fuck/data/category_data.dart';
 import 'package:fuck/models/category.dart';
 import 'package:fuck/provider/category_Provider.dart';
 import 'package:fuck/widgets/image_input.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class AddCategory extends ConsumerStatefulWidget {
@@ -27,11 +28,43 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
   }
 
   void _onSubmit() async {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.validate() && _image != null) {
+      final supabase = Supabase.instance.client;
+      final categoryId = const Uuid().v4();
+      final fileExt = _image!.path.split('.').last;
+      final filePath = 'categories/$categoryId.$fileExt';
+      final fileBytes = await _image!.readAsBytes();
+
+      String? publicUrl;
+
+      try {
+        final uploadPath = await supabase.storage
+            .from('category-images')
+            .uploadBinary(
+              filePath,
+              fileBytes,
+              fileOptions: FileOptions(
+                contentType: 'image/$fileExt',
+                upsert: true,
+              ),
+            );
+
+        if (uploadPath.isEmpty) throw Exception("Upload failed");
+        publicUrl = supabase.storage
+            .from('category-images')
+            .getPublicUrl(filePath);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('خطا در آپلود تصویر: $e')));
+        return;
+      }
+
       final category = Category(
-        id: const Uuid().v4(),
+        id: categoryId,
         title: _titleController.text,
-        image: _image!.path,
+        image: publicUrl,
       );
 
       await CategoryService().addCategory(category);
@@ -39,23 +72,32 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'دسته بندی با موفقیت افزوده شد',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          backgroundColor: Colors.green[700],
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.only(top: 20, left: 20, right: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      // First pop the modal
       Navigator.of(context).pop();
+
+      // Then show the SnackBar on the underlying scaffold's context
+      // Use a delay or Future.microtask to ensure modal is closed before showing SnackBar
+      Future.microtask(() {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'دسته بندی با موفقیت افزوده شد',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            backgroundColor: Colors.green[700],
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 20, left: 20, right: 20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      });
     }
   }
 
