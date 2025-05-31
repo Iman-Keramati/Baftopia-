@@ -1,9 +1,9 @@
+import 'package:Baftopia/provider/category_provider.dart';
+import 'package:Baftopia/widgets/add_category.dart';
+import 'package:Baftopia/widgets/category_item.dart';
+import 'package:Baftopia/widgets/floating_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fuck/provider/category_provider.dart';
-import 'package:fuck/widgets/add_category.dart';
-import 'package:fuck/widgets/category_item.dart';
-import 'package:fuck/widgets/floating_button.dart';
 
 class CategoriesScreen extends ConsumerWidget {
   const CategoriesScreen({super.key});
@@ -18,8 +18,8 @@ class CategoriesScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              showDialog(
+            onPressed: () async {
+              final result = await showDialog<bool>(
                 context: context,
                 builder:
                     (ctx) => AlertDialog(
@@ -27,6 +27,12 @@ class CategoriesScreen extends ConsumerWidget {
                       content: AddCategory(),
                     ),
               );
+
+              if (result == true) {
+                ref.invalidate(
+                  categoryProvider,
+                ); // or trigger via notifier if you use StateNotifier
+              }
             },
           ),
         ],

@@ -1,11 +1,11 @@
 import 'dart:io';
 
+import 'package:Baftopia/data/category_data.dart';
+import 'package:Baftopia/models/category.dart';
+import 'package:Baftopia/provider/category_provider.dart';
+import 'package:Baftopia/widgets/image_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fuck/data/category_data.dart';
-import 'package:fuck/models/category.dart';
-import 'package:fuck/provider/category_Provider.dart';
-import 'package:fuck/widgets/image_input.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -68,16 +68,17 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
       );
 
       await CategoryService().addCategory(category);
-      ref.invalidate(categoryProvider);
 
       if (!mounted) return;
 
       // First pop the modal
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(true);
+      ref.invalidate(categoryProvider);
 
       // Then show the SnackBar on the underlying scaffold's context
       // Use a delay or Future.microtask to ensure modal is closed before showing SnackBar
       Future.microtask(() {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(

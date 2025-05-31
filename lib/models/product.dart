@@ -1,4 +1,4 @@
-import 'package:fuck/models/category.dart';
+import 'package:Baftopia/models/category.dart';
 
 class ProductModel {
   final String id;

@@ -1,8 +1,8 @@
 import 'dart:io';
 
+import 'package:Baftopia/models/category.dart';
+import 'package:Baftopia/screens/category_detail.dart';
 import 'package:flutter/material.dart';
-import 'package:fuck/models/category.dart';
-import 'package:fuck/screens/category_detail.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 class CategoryItem extends StatelessWidget {

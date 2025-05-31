@@ -1,11 +1,11 @@
+import 'package:Baftopia/models/category.dart';
+import 'package:Baftopia/provider/product_provider.dart';
+import 'package:Baftopia/utils/persian_number.dart';
+import 'package:Baftopia/widgets/add_product.dart';
+import 'package:Baftopia/widgets/floating_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fuck/models/category.dart';
-import 'package:fuck/provider/product_provider.dart';
-import 'package:fuck/utils/persian_number.dart';
-import 'package:fuck/widgets/floating_button.dart';
 import 'package:transparent_image/transparent_image.dart';
-import 'package:fuck/widgets/add_product.dart';
 
 class CategoryDetailScreen extends ConsumerWidget {
   const CategoryDetailScreen({super.key, required this.category});

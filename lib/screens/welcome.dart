@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'package:Baftopia/screens/categories.dart';
 import 'package:flutter/material.dart';
-import 'package:fuck/screens/categories.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class WelcomeScreen extends StatefulWidget {

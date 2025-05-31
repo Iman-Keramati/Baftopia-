@@ -1,4 +1,4 @@
-import 'package:fuck/models/category.dart';
+import 'package:Baftopia/models/category.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CategoryService {

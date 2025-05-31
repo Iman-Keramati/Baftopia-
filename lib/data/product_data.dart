@@ -1,4 +1,4 @@
-import 'package:fuck/models/product.dart';
+import 'package:Baftopia/models/product.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProductService {

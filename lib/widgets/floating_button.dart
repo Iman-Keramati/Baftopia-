@@ -1,6 +1,6 @@
+import 'package:Baftopia/widgets/add_category.dart';
+import 'package:Baftopia/widgets/add_product.dart';
 import 'package:flutter/material.dart';
-import 'package:fuck/widgets/add_category.dart';
-import 'package:fuck/widgets/add_product.dart';
 
 class FloatingButton extends StatelessWidget {
   const FloatingButton({super.key});

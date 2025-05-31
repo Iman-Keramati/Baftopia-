@@ -1,14 +1,14 @@
 import 'dart:io';
 
+import 'package:Baftopia/data/product_data.dart';
+import 'package:Baftopia/models/category.dart';
+import 'package:Baftopia/models/product.dart';
+import 'package:Baftopia/provider/category_provider.dart';
+import 'package:Baftopia/provider/product_provider.dart';
+import 'package:Baftopia/widgets/image_input.dart';
+import 'package:Baftopia/widgets/persian_date_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fuck/data/product_data.dart';
-import 'package:fuck/models/category.dart';
-import 'package:fuck/models/product.dart';
-import 'package:fuck/provider/category_provider.dart';
-import 'package:fuck/provider/product_provider.dart';
-import 'package:fuck/widgets/image_input.dart';
-import 'package:fuck/widgets/persian_date_picker.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
