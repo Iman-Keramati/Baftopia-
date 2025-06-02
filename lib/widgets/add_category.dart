@@ -22,6 +22,7 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
   File? _image;
+  bool _isSubmitting = false;
 
   void _onPickImage(File image) {
     setState(() {
@@ -40,6 +41,8 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
       String? publicUrl;
 
       try {
+        setState(() => _isSubmitting = true); // 🟢 trigger loading spinner
+
         final uploadPath = await supabase.storage
             .from('category-images')
             .uploadBinary(
@@ -52,11 +55,13 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
             );
 
         if (uploadPath.isEmpty) throw Exception("Upload failed");
+
         publicUrl = supabase.storage
             .from('category-images')
             .getPublicUrl(filePath);
       } catch (e) {
         if (!mounted) return;
+        setState(() => _isSubmitting = false); // 🔴 stop loading on failure
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('خطا در آپلود تصویر: $e')));
@@ -71,7 +76,7 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
 
       try {
         await CategoryService().addCategory(category);
-        print('is poping.......');
+
         if (!mounted) return;
         Navigator.of(widget.modalContext ?? context).pop(true);
         ref.invalidate(categoryProvider);
@@ -80,7 +85,7 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
+              content: const Text(
                 'دسته بندی با موفقیت افزوده شد',
                 style: TextStyle(
                   color: Colors.white,
@@ -90,16 +95,15 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
               ),
               backgroundColor: Colors.green[700],
               behavior: SnackBarBehavior.floating,
-              margin: EdgeInsets.only(top: 20, left: 20, right: 20),
+              margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              duration: Duration(seconds: 2),
+              duration: const Duration(seconds: 2),
             ),
           );
         });
-      } catch (e, st) {
-        print('🔥 Error adding category: $e\n$st');
+      } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -107,6 +111,12 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
             backgroundColor: Colors.red[700],
           ),
         );
+      } finally {
+        if (mounted) {
+          setState(
+            () => _isSubmitting = false,
+          ); // ✅ always stop loading at the end
+        }
       }
     }
   }
@@ -172,8 +182,8 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton.icon(
-                      icon: Icon(Icons.add),
-                      onPressed: _onSubmit,
+                      icon: _isSubmitting ? null : Icon(Icons.add),
+                      onPressed: _isSubmitting ? null : _onSubmit,
                       style: ButtonStyle(
                         backgroundColor: MaterialStateProperty.all(
                           Theme.of(context).colorScheme.onSecondary,
@@ -187,7 +197,22 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
                           ),
                         ),
                       ),
-                      label: Text('افزودن دسته بندی'),
+                      label:
+                          _isSubmitting
+                              ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                              : const Text(
+                                'افزودن',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
                     ),
                   ],
                 ),

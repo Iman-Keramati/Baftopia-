@@ -37,6 +37,7 @@ class AddProduct extends ConsumerStatefulWidget {
 
 class _AddProductState extends ConsumerState<AddProduct> {
   final _formKey = GlobalKey<FormState>();
+  bool _isSubmitting = false;
 
   final TextEditingController _nameController = TextEditingController();
   Difficulty _difficultyController = Difficulty.beginner;
@@ -76,16 +77,28 @@ class _AddProductState extends ConsumerState<AddProduct> {
   }
 
   Future<void> _onSubmit() async {
-    if (_formKey.currentState!.validate()) {
-      if (_imageController == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('لطفا تصویر محصول را انتخاب کنید')),
-        );
-        return;
-      }
+    if (!_formKey.currentState!.validate()) return;
 
+    if (_imageController == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لطفا تصویر محصول را انتخاب کنید')),
+      );
+      return;
+    }
+
+    if (_categoryController == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لطفا یک دسته‌بندی انتخاب کنید')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true); // 🔥 start loading
+
+    try {
       final imageUrl = await uploadImageToSupabase(_imageController!);
       if (imageUrl == null) {
+        if (!mounted) return;
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('خطا در بارگذاری تصویر')));
@@ -95,7 +108,7 @@ class _AddProductState extends ConsumerState<AddProduct> {
       final product = ProductModel(
         id: const Uuid().v4(),
         title: _nameController.text.trim(),
-        image: imageUrl, // now the public URL from Supabase
+        image: imageUrl,
         startDate: _startDateController,
         endDate: _endDateController,
         difficultyLevel: _difficultyController.name,
@@ -103,36 +116,38 @@ class _AddProductState extends ConsumerState<AddProduct> {
         category: _categoryController!,
       );
 
-      try {
-        await ProductService().addProduct(product);
-        ref.invalidate(productProvider);
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'بافتنی با موفقیت افزوده شد',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            backgroundColor: Colors.green[700],
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+      await ProductService().addProduct(product);
 
-        Navigator.of(context).pop();
-      } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('خطا در افزودن محصول: $e')));
-      }
+      ref.invalidate(productProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'بافتنی با موفقیت افزوده شد',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          backgroundColor: Colors.green[700],
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('خطا در افزودن محصول: $e')));
+    } finally {
+      setState(() => _isSubmitting = false); // 💦 stop loading
     }
   }
 
@@ -178,8 +193,9 @@ class _AddProductState extends ConsumerState<AddProduct> {
                             )
                             .toList(),
                     onChanged: (val) {
-                      if (val != null)
+                      if (val != null) {
                         setState(() => _difficultyController = val);
+                      }
                     },
                     decoration: const InputDecoration(labelText: 'سطح دشواری'),
                   ),
@@ -198,8 +214,9 @@ class _AddProductState extends ConsumerState<AddProduct> {
                             )
                             .toList(),
                     onChanged: (val) {
-                      if (val != null)
+                      if (val != null) {
                         setState(() => _categoryController = val);
+                      }
                     },
                     decoration: const InputDecoration(labelText: 'دسته بندی'),
                     validator:
@@ -259,7 +276,7 @@ class _AddProductState extends ConsumerState<AddProduct> {
                     children: [
                       Spacer(),
                       ElevatedButton(
-                        onPressed: _onSubmit,
+                        onPressed: _isSubmitting ? null : _onSubmit,
                         style: ButtonStyle(
                           backgroundColor: MaterialStateProperty.all(
                             Theme.of(context).colorScheme.onSecondary,
@@ -273,10 +290,22 @@ class _AddProductState extends ConsumerState<AddProduct> {
                             ),
                           ),
                         ),
-                        child: const Text(
-                          'افزودن',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                        child:
+                            _isSubmitting
+                                ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                                : const Text(
+                                  'افزودن',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
                       ),
                     ],
                   ),

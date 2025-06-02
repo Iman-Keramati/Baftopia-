@@ -2,23 +2,28 @@ import 'package:baftopia/models/product.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProductService {
-  Future<void> addProduct(ProductModel product) async {
+  Future<ProductModel> addProduct(ProductModel product) async {
     final supabase = Supabase.instance.client;
 
-    final response = await supabase.from('products').insert({
-      'id': product.id,
-      'title': product.title,
-      'image': product.image,
-      'start_date': product.startDate.toIso8601String(),
-      'end_date': product.endDate.toIso8601String(),
-      'difficulty_level': product.difficultyLevel,
-      'description': product.description,
-      'category_id': product.category.id, // 👈 important
-    });
+    final response =
+        await supabase
+            .from('products')
+            .insert({
+              'id': product.id,
+              'title': product.title,
+              'image': product.image,
+              'start_date': product.startDate.toIso8601String(),
+              'end_date': product.endDate.toIso8601String(),
+              'difficulty_level': product.difficultyLevel,
+              'description': product.description,
+              'category_id': product.category.id,
+            })
+            .select('*, categories(*)')
+            .single();
 
-    if (response.error != null) {
-      throw Exception('Failed to add product: ${response.error!.message}');
-    }
+    print('Supabase response: $response');
+
+    return ProductModel.fromJson(response);
   }
 
   Future<List<ProductModel>> getProducts() async {
@@ -26,7 +31,7 @@ class ProductService {
     try {
       final List<dynamic> response = await supabase
           .from('products')
-          .select('*, categories(*)'); // 👈 joins the category
+          .select('*, categories(*)');
 
       return response
           .map((json) => ProductModel.fromJson(json as Map<String, dynamic>))

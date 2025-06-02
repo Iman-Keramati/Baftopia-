@@ -30,7 +30,7 @@ class ProductModel {
       endDate: DateTime.parse(json['end_date']),
       difficultyLevel: json['difficulty_level'],
       description: json['description'] ?? '',
-      category: Category.fromJson(json['categories']),
+      category: Category.fromJson(json['categories'] as Map<String, dynamic>),
     );
   }
 }
