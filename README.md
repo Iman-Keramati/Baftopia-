@@ -1,4 +1,4 @@
-# Baftopia
+# baftopia
 
 A new Flutter project.
 

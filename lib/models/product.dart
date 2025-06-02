@@ -1,4 +1,4 @@
-import 'package:Baftopia/models/category.dart';
+import 'package:baftopia/models/category.dart';
 
 class ProductModel {
   final String id;

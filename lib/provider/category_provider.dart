@@ -1,4 +1,4 @@
-import 'package:Baftopia/models/category.dart';
+import 'package:baftopia/models/category.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/category_data.dart';
 

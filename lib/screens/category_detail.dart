@@ -1,8 +1,8 @@
-import 'package:Baftopia/models/category.dart';
-import 'package:Baftopia/provider/product_provider.dart';
-import 'package:Baftopia/utils/persian_number.dart';
-import 'package:Baftopia/widgets/add_product.dart';
-import 'package:Baftopia/widgets/floating_button.dart';
+import 'package:baftopia/models/category.dart';
+import 'package:baftopia/provider/product_provider.dart';
+import 'package:baftopia/utils/persian_number.dart';
+import 'package:baftopia/widgets/add_product.dart';
+import 'package:baftopia/widgets/floating_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:transparent_image/transparent_image.dart';

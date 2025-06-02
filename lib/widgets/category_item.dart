@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:Baftopia/models/category.dart';
-import 'package:Baftopia/screens/category_detail.dart';
+import 'package:baftopia/models/category.dart';
+import 'package:baftopia/screens/category_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
 

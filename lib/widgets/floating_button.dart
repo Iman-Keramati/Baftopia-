@@ -1,5 +1,5 @@
-import 'package:Baftopia/widgets/add_category.dart';
-import 'package:Baftopia/widgets/add_product.dart';
+import 'package:baftopia/widgets/add_category.dart';
+import 'package:baftopia/widgets/add_product.dart';
 import 'package:flutter/material.dart';
 
 class FloatingButton extends StatelessWidget {
@@ -8,12 +8,23 @@ class FloatingButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     void openCategoryDialog() {
-      showDialog(
+      showModalBottomSheet<bool>(
         context: context,
+        isScrollControlled: true, // KEY PART
+        backgroundColor: Colors.transparent, // Optional for styling
         builder:
-            (ctx) => AlertDialog(
-              title: Text('افزودن دسته بندی جدید'),
-              content: AddCategory(),
+            (ctx) => Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).dialogBackgroundColor,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: AddCategory(modalContext: ctx),
+              ),
             ),
       );
     }
@@ -21,39 +32,57 @@ class FloatingButton extends StatelessWidget {
     void openProductDialog() {
       showModalBottomSheet(
         context: context,
-        builder:
-            (ctx) => AlertDialog(
-              title: Directionality(
-                textDirection: TextDirection.rtl,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'بافتنی جدید',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent, // Optional for rounded corners
+        builder: (ctx) {
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.8, // 80% of screen height
+            minChildSize: 0.3,
+            maxChildSize: 0.95,
+            builder:
+                (_, controller) => Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).dialogBackgroundColor,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(20),
                     ),
-                    TextButton.icon(
-                      style: TextButton.styleFrom(
-                        foregroundColor:
-                            Theme.of(context).colorScheme.onSecondary,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: ListView(
+                    controller: controller,
+                    children: [
+                      Directionality(
+                        textDirection: TextDirection.rtl,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'بافتنی جدید',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextButton.icon(
+                              style: TextButton.styleFrom(
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.onSecondary,
+                              ),
+                              onPressed: openCategoryDialog,
+                              icon: Icon(Icons.add),
+                              label: Text('افزودن دسته بندی'),
+                            ),
+                          ],
+                        ),
                       ),
-                      onPressed: openCategoryDialog,
-                      icon: Icon(Icons.add),
-                      label: Text('افزودن دسته بندی'),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      AddProduct(), // 👈 Your custom form/widget
+                    ],
+                  ),
                 ),
-              ),
-              titlePadding: EdgeInsets.only(bottom: 12),
-              content: AddProduct(),
-              contentPadding: const EdgeInsets.all(8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
+          );
+        },
       );
     }
 

@@ -1,7 +1,7 @@
-import 'package:Baftopia/provider/category_provider.dart';
-import 'package:Baftopia/widgets/add_category.dart';
-import 'package:Baftopia/widgets/category_item.dart';
-import 'package:Baftopia/widgets/floating_button.dart';
+import 'package:baftopia/provider/category_provider.dart';
+import 'package:baftopia/widgets/add_category.dart';
+import 'package:baftopia/widgets/category_item.dart';
+import 'package:baftopia/widgets/floating_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,13 +19,10 @@ class CategoriesScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () async {
-              final result = await showDialog<bool>(
+              final result = await showModalBottomSheet<bool>(
                 context: context,
-                builder:
-                    (ctx) => AlertDialog(
-                      title: Text('افزودن دسته بندی جدید'),
-                      content: AddCategory(),
-                    ),
+                isScrollControlled: true,
+                builder: (ctx) => AddCategory(modalContext: ctx), // just this
               );
 
               if (result == true) {
@@ -42,7 +39,7 @@ class CategoriesScreen extends ConsumerWidget {
             Image.asset('assets/icons/Logo-icon.png', width: 50, height: 50),
             const SizedBox(width: 8),
             const Text(
-              'Baftopia',
+              'baftopia',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
             ),
           ],

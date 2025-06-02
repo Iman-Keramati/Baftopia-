@@ -1,4 +1,4 @@
-package com.example.fuck
+package com.example.baftopia
 
 import io.flutter.embedding.android.FlutterActivity
 

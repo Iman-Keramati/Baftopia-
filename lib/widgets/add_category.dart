@@ -1,16 +1,18 @@
 import 'dart:io';
 
-import 'package:Baftopia/data/category_data.dart';
-import 'package:Baftopia/models/category.dart';
-import 'package:Baftopia/provider/category_provider.dart';
-import 'package:Baftopia/widgets/image_input.dart';
+import 'package:baftopia/data/category_data.dart';
+import 'package:baftopia/models/category.dart';
+import 'package:baftopia/provider/category_provider.dart';
+import 'package:baftopia/widgets/image_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class AddCategory extends ConsumerStatefulWidget {
-  const AddCategory({super.key});
+  const AddCategory({super.key, this.modalContext});
+
+  final BuildContext? modalContext;
 
   @override
   ConsumerState<AddCategory> createState() => _AddCategoryState();
@@ -67,89 +69,131 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
         image: publicUrl,
       );
 
-      await CategoryService().addCategory(category);
+      try {
+        await CategoryService().addCategory(category);
+        print('is poping.......');
+        if (!mounted) return;
+        Navigator.of(widget.modalContext ?? context).pop(true);
+        ref.invalidate(categoryProvider);
 
-      if (!mounted) return;
-
-      // First pop the modal
-      Navigator.of(context).pop(true);
-      ref.invalidate(categoryProvider);
-
-      // Then show the SnackBar on the underlying scaffold's context
-      // Use a delay or Future.microtask to ensure modal is closed before showing SnackBar
-      Future.microtask(() {
+        Future.microtask(() {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'دسته بندی با موفقیت افزوده شد',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              backgroundColor: Colors.green[700],
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.only(top: 20, left: 20, right: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        });
+      } catch (e, st) {
+        print('🔥 Error adding category: $e\n$st');
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'دسته بندی با موفقیت افزوده شد',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            backgroundColor: Colors.green[700],
-            behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.only(top: 20, left: 20, right: 20),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            duration: Duration(seconds: 2),
+            content: Text('خطا در افزودن دسته‌بندی: $e'),
+            backgroundColor: Colors.red[700],
           ),
         );
-      });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              controller: _titleController,
-              decoration: InputDecoration(labelText: 'عنوان دسته بندی'),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'لطفاً عنوان دسته بندی را وارد کنید';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            ImageInput(
-              onPickImage: _onPickImage,
-              imageSelectionType: 'gallery',
-            ),
-            const SizedBox(height: 16),
-            Row(
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            bottom: bottomInset + 20,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Spacer(),
-                ElevatedButton(
-                  onPressed: _onSubmit,
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(
-                      Theme.of(context).colorScheme.onSecondary,
-                    ),
-                    foregroundColor: MaterialStateProperty.all((Colors.white)),
-                    shape: MaterialStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                TextFormField(
+                  controller: _titleController,
+                  decoration: InputDecoration(labelText: 'عنوان دسته بندی'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'لطفاً عنوان دسته بندی را وارد کنید';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                ImageInput(
+                  onPickImage: _onPickImage,
+                  imageSelectionType: 'gallery',
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const Spacer(),
+                    OutlinedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.onSecondary,
+                          width: 2,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        'انصراف',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSecondary,
+                        ),
                       ),
                     ),
-                  ),
-                  child: Text('افزودن دسته بندی'),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      icon: Icon(Icons.add),
+                      onPressed: _onSubmit,
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(
+                          Theme.of(context).colorScheme.onSecondary,
+                        ),
+                        foregroundColor: MaterialStateProperty.all(
+                          Colors.white,
+                        ),
+                        shape: MaterialStateProperty.all(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                      label: Text('افزودن دسته بندی'),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -1,17 +1,23 @@
-import 'package:Baftopia/models/category.dart';
+import 'package:baftopia/models/category.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CategoryService {
   Future<void> addCategory(Category category) async {
     final supabase = Supabase.instance.client;
-    final response = await supabase.from('categories').insert({
-      'id': category.id,
-      'title': category.title,
-      'image': category.image,
-    });
 
-    if (response == null || response.isEmpty) {
-      throw Exception('Insert failed or returned empty');
+    try {
+      final response =
+          await supabase.from('categories').insert({
+            'id': category.id,
+            'title': category.title,
+            'image': category.image,
+          }).select(); // 👈 force return
+
+      if (response.isEmpty) {
+        throw Exception('Insert succeeded but returned empty result.');
+      }
+    } catch (e) {
+      throw Exception('Insert failed: $e');
     }
   }
 
