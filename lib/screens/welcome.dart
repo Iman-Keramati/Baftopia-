@@ -35,7 +35,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFE6DB), // soft peachy tone
+      backgroundColor: const Color(0xFFFBEAE5), // soft peachy tone
       body: Center(
         child: AnimatedOpacity(
           opacity: _opacity,
@@ -52,7 +52,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                   fontSize: 20,
                   fontFamily: GoogleFonts.lalezar.toString(),
-                  color: const Color.fromARGB(255, 226, 127, 102),
+                  color: const Color(0xFF5E4A47),
                 ),
               ),
             ],
