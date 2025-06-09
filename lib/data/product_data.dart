@@ -40,4 +40,30 @@ class ProductService {
       throw Exception('Failed to fetch products: $e');
     }
   }
+
+  Future<void> removeProduct(String id) async {
+    final supabase = Supabase.instance.client;
+
+    try {
+      final response =
+          await supabase
+              .from('products')
+              .delete()
+              .eq('id', id)
+              .select()
+              .single();
+
+      if (response.isEmpty) {
+        throw Exception('No data returned from Supabase.');
+      }
+
+      print('Product deleted: $response');
+    } on PostgrestException catch (e) {
+      print('Supabase error: ${e.message}');
+      throw Exception('خطا هنگام حذف محصول: ${e.message}');
+    } catch (e) {
+      print('Unexpected error: $e');
+      throw Exception('خطای غیرمنتظره هنگام حذف محصول: $e');
+    }
+  }
 }

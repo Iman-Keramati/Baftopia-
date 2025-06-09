@@ -1,17 +1,19 @@
 import 'package:baftopia/models/product.dart';
+import 'package:baftopia/utils/delete_product.dart';
 import 'package:baftopia/widgets/add_product.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_jalali_date_picker/flutter_jalali_date_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import 'package:transparent_image/transparent_image.dart';
 
-class ProductDetail extends StatelessWidget {
+class ProductDetail extends ConsumerWidget {
   const ProductDetail({super.key, required this.product});
 
   final ProductModel product;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     Difficulty difficultyFromString(String value) {
       return Difficulty.values.firstWhere(
         (d) => d.name == value,
@@ -20,7 +22,14 @@ class ProductDetail extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () => deleteProductHandler(context, ref, product),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),

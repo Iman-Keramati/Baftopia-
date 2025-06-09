@@ -1,16 +1,18 @@
 import 'package:baftopia/models/product.dart';
 import 'package:baftopia/screens/product_detail.dart';
+import 'package:baftopia/utils/delete_product.dart';
 import 'package:baftopia/widgets/add_product.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:transparent_image/transparent_image.dart';
 
-class ProductItem extends StatelessWidget {
+class ProductItem extends ConsumerWidget {
   const ProductItem({super.key, required this.product});
 
   final ProductModel product;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     Difficulty difficultyFromString(String value) {
       return Difficulty.values.firstWhere(
         (d) => d.name == value,
@@ -117,6 +119,12 @@ class ProductItem extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            IconButton(
+              onPressed: () {
+                deleteProductHandler(context, ref, product);
+              },
+              icon: Icon(Icons.delete),
             ),
           ],
         ),
