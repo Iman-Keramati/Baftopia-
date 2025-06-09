@@ -1,5 +1,8 @@
 import 'package:baftopia/models/product.dart';
+import 'package:baftopia/widgets/add_product.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_jalali_date_picker/flutter_jalali_date_picker.dart';
+import 'package:shamsi_date/shamsi_date.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 class ProductDetail extends StatelessWidget {
@@ -9,10 +12,18 @@ class ProductDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Difficulty difficultyFromString(String value) {
+      return Difficulty.values.firstWhere(
+        (d) => d.name == value,
+        orElse: () => Difficulty.beginner,
+      );
+    }
+
     return Scaffold(
+      appBar: AppBar(),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -41,28 +52,78 @@ class ProductDetail extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Text(
-                product.title,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSecondary,
-                  fontSize: 26,
-                ),
-              ),
-              const SizedBox(height: 12),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 12),
-                    child: Text(
-                      product.difficultyLevel,
-                      style: TextStyle(
-                        backgroundColor:
-                            Theme.of(context).colorScheme.onSecondary,
-                      ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          difficultyFromString(product.difficultyLevel).icon,
+                          color:
+                              Theme.of(
+                                context,
+                              ).colorScheme.onSecondaryContainer,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          difficultyFromString(
+                            product.difficultyLevel,
+                          ).persianLabel,
+                          style: TextStyle(
+                            color:
+                                Theme.of(
+                                  context,
+                                ).colorScheme.onSecondaryContainer,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    product.title,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSecondary,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(product.date.toJalali().formatFullDate()),
+                      Icon(Icons.calendar_month),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text('مدت زمان بافت:  ${product.timeSpent}'),
+                      Icon(Icons.timer_rounded),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(product.description),
             ],
           ),
         ),
