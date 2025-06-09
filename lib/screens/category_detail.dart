@@ -1,12 +1,10 @@
 import 'package:baftopia/models/category.dart';
 import 'package:baftopia/provider/product_provider.dart';
-import 'package:baftopia/utils/persian_number.dart';
 import 'package:baftopia/widgets/add_product.dart';
 import 'package:baftopia/widgets/floating_button.dart';
 import 'package:baftopia/widgets/product_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:transparent_image/transparent_image.dart';
 
 class CategoryDetailScreen extends ConsumerWidget {
   const CategoryDetailScreen({super.key, required this.category});
@@ -33,7 +31,6 @@ class CategoryDetailScreen extends ConsumerWidget {
       body: productsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) {
-          print(error);
           return Center(child: Text('خطا در بارگذاری محصولات: $error'));
         },
         data: (products) {
@@ -53,9 +50,11 @@ class CategoryDetailScreen extends ConsumerWidget {
               itemCount: filteredProducts.length,
               itemBuilder: (context, index) {
                 final product = filteredProducts[index];
-                final duration = product.endDate.difference(product.startDate);
 
-                return ProductItem(product: product, duration: duration);
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: ProductItem(product: product),
+                );
               },
               separatorBuilder: (_, __) => const SizedBox(height: 8),
             ),

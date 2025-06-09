@@ -26,6 +26,17 @@ extension DifficultyExtension on Difficulty {
         return 'پیشرفته';
     }
   }
+
+  IconData get icon {
+    switch (this) {
+      case Difficulty.beginner:
+        return Icons.self_improvement;
+      case Difficulty.intermediate:
+        return Icons.directions_walk;
+      case Difficulty.advanced:
+        return Icons.whatshot;
+    }
+  }
 }
 
 class AddProduct extends ConsumerStatefulWidget {
@@ -40,10 +51,10 @@ class _AddProductState extends ConsumerState<AddProduct> {
   bool _isSubmitting = false;
 
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _timeSpentController = TextEditingController();
   Difficulty _difficultyController = Difficulty.beginner;
   Category? _categoryController;
-  DateTime _startDateController = DateTime.now();
-  DateTime _endDateController = DateTime.now();
+  DateTime _dateController = DateTime.now();
   File? _imageController; // nullable to check if selected
 
   @override
@@ -109,8 +120,8 @@ class _AddProductState extends ConsumerState<AddProduct> {
         id: const Uuid().v4(),
         title: _nameController.text.trim(),
         image: imageUrl,
-        startDate: _startDateController,
-        endDate: _endDateController,
+        date: _dateController,
+        timeSpent: _timeSpentController.text.trim(),
         difficultyLevel: _difficultyController.name,
         description: '',
         category: _categoryController!,
@@ -227,24 +238,17 @@ class _AddProductState extends ConsumerState<AddProduct> {
                   ),
 
                   const SizedBox(height: 10),
-                  JalaliDatePickerField(
-                    labelText: 'تاریخ شروع',
-                    onChanged: (jalaliDate) {
-                      final parts = jalaliDate.split('/');
-                      final jalali = Jalali(
-                        int.parse(parts[0]),
-                        int.parse(parts[1]),
-                        int.parse(parts[2]),
-                      );
-                      final gregorian = jalali.toGregorian();
-                      setState(() {
-                        _startDateController = DateTime(
-                          gregorian.year,
-                          gregorian.month,
-                          gregorian.day,
-                        );
-                      });
-                    },
+                  TextFormField(
+                    maxLength: 50,
+                    controller: _timeSpentController,
+                    validator:
+                        (value) =>
+                            (value == null || value.isEmpty)
+                                ? 'لطفا زمان صرف شده را وارد کنید'
+                                : null,
+                    decoration: const InputDecoration(
+                      labelText: 'زمان صرف شده',
+                    ),
                   ),
                   const SizedBox(height: 10),
                   JalaliDatePickerField(
@@ -258,7 +262,7 @@ class _AddProductState extends ConsumerState<AddProduct> {
                       );
                       final gregorian = jalali.toGregorian();
                       setState(() {
-                        _endDateController = DateTime(
+                        _dateController = DateTime(
                           gregorian.year,
                           gregorian.month,
                           gregorian.day,

@@ -4,8 +4,8 @@ class ProductModel {
   final String id;
   final String title;
   final String image;
-  final DateTime startDate;
-  final DateTime endDate;
+  final DateTime date;
+  final String timeSpent;
   final String difficultyLevel;
   final String description;
   final Category category;
@@ -14,8 +14,8 @@ class ProductModel {
     required this.id,
     required this.title,
     required this.image,
-    required this.startDate,
-    required this.endDate,
+    required this.date,
+    required this.timeSpent,
     required this.difficultyLevel,
     required this.description,
     required this.category,
@@ -26,8 +26,8 @@ class ProductModel {
       id: json['id'],
       title: json['title'],
       image: json['image'],
-      startDate: DateTime.parse(json['start_date']),
-      endDate: DateTime.parse(json['end_date']),
+      date: DateTime.parse(json['date']),
+      timeSpent: json['time_spent'],
       difficultyLevel: json['difficulty_level'],
       description: json['description'] ?? '',
       category: Category.fromJson(json['categories'] as Map<String, dynamic>),
