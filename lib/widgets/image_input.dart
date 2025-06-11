@@ -1,40 +1,40 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ImageInput extends StatefulWidget {
+  final void Function(File image) onPickImage;
+  final String? existingImageUrl;
+
   const ImageInput({
     super.key,
     required this.onPickImage,
-    this.imageSelectionType = 'camera',
+    this.existingImageUrl,
   });
 
-  final void Function(File image) onPickImage;
-  final String? imageSelectionType;
-
   @override
-  State<ImageInput> createState() {
-    return _ImageInputState();
-  }
+  State<ImageInput> createState() => _ImageInputState();
 }
 
 class _ImageInputState extends State<ImageInput> {
   File? _selectedImage;
 
-  void _takePicture() async {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingImageUrl != null) {
+      // We don't need to set _selectedImage here since we'll show the network image
+    }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
     final imagePicker = ImagePicker();
     final pickedImage = await imagePicker.pickImage(
-      source:
-          widget.imageSelectionType == 'camera'
-              ? ImageSource.camera
-              : ImageSource.gallery,
+      source: source,
       maxWidth: 250,
     );
 
-    if (pickedImage == null) {
-      return;
-    }
+    if (pickedImage == null) return;
 
     setState(() {
       _selectedImage = File(pickedImage.path);
@@ -43,29 +43,53 @@ class _ImageInputState extends State<ImageInput> {
     widget.onPickImage(_selectedImage!);
   }
 
+  void _showImageSourceActionSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('گرفتن عکس با دوربین'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('انتخاب از گالری'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget content = TextButton.icon(
-      onPressed: _takePicture,
-      label: Text(
-        widget.imageSelectionType == 'camera'
-            ? 'عکس بگیرید'
-            : 'انتخاب از گالری',
-        style: TextStyle(color: Theme.of(context).colorScheme.primary),
-      ),
-      icon: Icon(
-        widget.imageSelectionType == 'camera'
-            ? Icons.camera_alt
-            : Icons.photo_library,
-        color: Theme.of(context).colorScheme.primary,
-      ),
+      onPressed: _showImageSourceActionSheet,
+      label: const Text('انتخاب عکس'),
+      icon: const Icon(Icons.add_a_photo),
     );
 
     if (_selectedImage != null) {
       content = GestureDetector(
-        onTap: _takePicture,
+        onTap: _showImageSourceActionSheet,
         child: ClipRRect(
-          clipBehavior: Clip.hardEdge,
           borderRadius: BorderRadius.circular(10),
           child: SizedBox(
             width: double.infinity,
@@ -74,18 +98,47 @@ class _ImageInputState extends State<ImageInput> {
           ),
         ),
       );
+    } else if (widget.existingImageUrl != null) {
+      content = GestureDetector(
+        onTap: _showImageSourceActionSheet,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: SizedBox(
+            width: double.infinity,
+            height: 250,
+            child: Image.network(
+              widget.existingImageUrl!,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Center(
+                  child: CircularProgressIndicator(
+                    value:
+                        loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return const Center(child: Icon(Icons.error_outline, size: 50));
+              },
+            ),
+          ),
+        ),
+      );
     }
 
     return Container(
+      width: double.infinity,
+      height: 250,
       decoration: BoxDecoration(
         border: Border.all(
-          width: 1,
           color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
         ),
+        borderRadius: BorderRadius.circular(10),
       ),
-      height: 250,
-      width: double.infinity,
-      alignment: Alignment.center,
       child: content,
     );
   }

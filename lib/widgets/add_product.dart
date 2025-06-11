@@ -40,7 +40,8 @@ extension DifficultyExtension on Difficulty {
 }
 
 class AddProduct extends ConsumerStatefulWidget {
-  const AddProduct({super.key});
+  final ProductModel? product;
+  const AddProduct({super.key, this.product});
 
   @override
   ConsumerState<AddProduct> createState() => _AddProductState();
@@ -56,11 +57,34 @@ class _AddProductState extends ConsumerState<AddProduct> {
   Category? _categoryController;
   DateTime _dateController = DateTime.now();
   File? _imageController; // nullable to check if selected
+  String? _existingImageUrl; // Add this for existing image URL
+  final TextEditingController _descriptionController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _categoryController = null;
+
+    // If in edit mode, populate the fields
+    if (widget.product != null) {
+      _nameController.text = widget.product!.title;
+      _timeSpentController.text = widget.product!.timeSpent;
+      _difficultyController = Difficulty.values.firstWhere(
+        (d) => d.name == widget.product!.difficultyLevel,
+        orElse: () => Difficulty.beginner,
+      );
+      _categoryController = null;
+      _dateController = widget.product!.date;
+      _existingImageUrl = widget.product!.image; // Store existing image URL
+      _descriptionController.text = widget.product!.description;
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _timeSpentController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
   }
 
   Future<String?> uploadImageToSupabase(File imageFile) async {
@@ -90,7 +114,7 @@ class _AddProductState extends ConsumerState<AddProduct> {
   Future<void> _onSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_imageController == null) {
+    if (_imageController == null && widget.product == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('لطفا تصویر محصول را انتخاب کنید')),
       );
@@ -104,37 +128,52 @@ class _AddProductState extends ConsumerState<AddProduct> {
       return;
     }
 
-    setState(() => _isSubmitting = true); // 🔥 start loading
+    setState(() => _isSubmitting = true);
 
     try {
-      final imageUrl = await uploadImageToSupabase(_imageController!);
-      if (imageUrl == null) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('خطا در بارگذاری تصویر')));
-        return;
+      String imageUrl;
+      if (_imageController != null) {
+        final uploadedUrl = await uploadImageToSupabase(_imageController!);
+        if (uploadedUrl == null) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('خطا در بارگذاری تصویر')),
+          );
+          return;
+        }
+        imageUrl = uploadedUrl;
+      } else {
+        imageUrl = widget.product!.image;
       }
 
       final product = ProductModel(
-        id: const Uuid().v4(),
+        id: widget.product?.id ?? const Uuid().v4(),
         title: _nameController.text.trim(),
         image: imageUrl,
         date: _dateController,
         timeSpent: _timeSpentController.text.trim(),
         difficultyLevel: _difficultyController.name,
-        description: '',
+        description: _descriptionController.text.trim(),
         category: _categoryController!,
       );
 
-      await ProductService().addProduct(product);
+      if (widget.product != null) {
+        await ProductService().updateProduct(product);
+      } else {
+        await ProductService().addProduct(product);
+      }
 
+      // Invalidate both product and category providers to ensure UI updates
       ref.invalidate(productProvider);
+      ref.invalidate(categoryProvider);
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'بافتنی با موفقیت افزوده شد',
+            widget.product != null
+                ? 'بافتنی با موفقیت ویرایش شد'
+                : 'بافتنی با موفقیت افزوده شد',
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -151,14 +190,19 @@ class _AddProductState extends ConsumerState<AddProduct> {
         ),
       );
 
-      Navigator.of(context).pop(true);
+      // Pop with the updated product to update the detail view
+      Navigator.of(context).pop(widget.product != null ? product : true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('خطا در افزودن محصول: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'خطا در ${widget.product != null ? 'ویرایش' : 'افزودن'} محصول: $e',
+          ),
+        ),
+      );
     } finally {
-      setState(() => _isSubmitting = false); // 💦 stop loading
+      setState(() => _isSubmitting = false);
     }
   }
 
@@ -168,9 +212,16 @@ class _AddProductState extends ConsumerState<AddProduct> {
 
     return categoriesAsync.when(
       data: (categories) {
+        // Initialize category in build where categories are available
         if (_categoryController == null && categories.isNotEmpty) {
-          // Set default category if none selected yet
-          _categoryController = categories.first;
+          if (widget.product != null) {
+            _categoryController = categories.firstWhere(
+              (cat) => cat.id == widget.product!.category.id,
+              orElse: () => categories.first,
+            );
+          } else {
+            _categoryController = categories.first;
+          }
         }
 
         return Directionality(
@@ -178,7 +229,12 @@ class _AddProductState extends ConsumerState<AddProduct> {
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
               child: Column(
                 children: [
                   TextFormField(
@@ -212,7 +268,7 @@ class _AddProductState extends ConsumerState<AddProduct> {
                   ),
                   const SizedBox(height: 10),
 
-                  // *** Your dynamic categories dropdown ***
+                  // Category dropdown
                   DropdownButtonFormField<Category>(
                     value: _categoryController,
                     items:
@@ -253,6 +309,7 @@ class _AddProductState extends ConsumerState<AddProduct> {
                   const SizedBox(height: 10),
                   JalaliDatePickerField(
                     labelText: 'تاریخ پایان',
+                    initialDate: _dateController, // Add initial date
                     onChanged: (jalaliDate) {
                       final parts = jalaliDate.split('/');
                       final jalali = Jalali(
@@ -274,8 +331,15 @@ class _AddProductState extends ConsumerState<AddProduct> {
                   ImageInput(
                     onPickImage:
                         (file) => setState(() => _imageController = file),
+                    existingImageUrl:
+                        _existingImageUrl, // Pass existing image URL
                   ),
                   const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: const InputDecoration(labelText: 'توضیحات'),
+                  ),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Spacer(),
@@ -306,9 +370,11 @@ class _AddProductState extends ConsumerState<AddProduct> {
                                     ),
                                   ),
                                 )
-                                : const Text(
-                                  'افزودن',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                : Text(
+                                  widget.product != null ? 'ویرایش' : 'افزودن',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                       ),
                     ],

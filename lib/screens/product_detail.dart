@@ -25,6 +25,72 @@ class ProductDetail extends ConsumerWidget {
       appBar: AppBar(
         actions: [
           IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final updatedProduct = await showModalBottomSheet<ProductModel>(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (ctx) {
+                  return DraggableScrollableSheet(
+                    expand: false,
+                    initialChildSize: 0.8,
+                    minChildSize: 0.3,
+                    maxChildSize: 0.95,
+                    builder:
+                        (_, controller) => Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).dialogBackgroundColor,
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
+                          ),
+                          padding: const EdgeInsets.all(16),
+                          child: ListView(
+                            controller: controller,
+                            children: [
+                              Directionality(
+                                textDirection: TextDirection.rtl,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      'ویرایش بافتنی',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      icon: const Icon(Icons.close),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              AddProduct(product: product),
+                            ],
+                          ),
+                        ),
+                  );
+                },
+              );
+
+              if (updatedProduct != null) {
+                // If we got an updated product, pop the detail screen and push a new one
+                // This ensures the UI is updated with the new data
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (ctx) => ProductDetail(product: updatedProduct),
+                  ),
+                );
+              }
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () => deleteProductHandler(context, ref, product),
           ),

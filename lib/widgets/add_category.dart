@@ -152,10 +152,7 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
                   },
                 ),
                 const SizedBox(height: 16),
-                ImageInput(
-                  onPickImage: _onPickImage,
-                  imageSelectionType: 'gallery',
-                ),
+                ImageInput(onPickImage: _onPickImage),
                 const SizedBox(height: 16),
                 Row(
                   children: [
