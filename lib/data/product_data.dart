@@ -66,4 +66,31 @@ class ProductService {
       throw Exception('خطای غیرمنتظره هنگام حذف محصول: $e');
     }
   }
+
+  Future<ProductModel> updateProduct(ProductModel product) async {
+    final supabase = Supabase.instance.client;
+
+    try {
+      final response =
+          await supabase
+              .from('products')
+              .update({
+                'title': product.title,
+                'image': product.image,
+                'date': product.date.toIso8601String(),
+                'time_spent': product.timeSpent,
+                'difficulty_level': product.difficultyLevel,
+                'description': product.description,
+                'category_id': product.category.id,
+              })
+              .eq('id', product.id)
+              .select('*, categories(*)')
+              .single();
+
+      return ProductModel.fromJson(response);
+    } catch (e) {
+      print('Error updating product: $e');
+      throw Exception('خطا در ویرایش محصول: $e');
+    }
+  }
 }

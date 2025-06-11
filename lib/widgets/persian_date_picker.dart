@@ -5,11 +5,13 @@ import 'package:shamsi_date/shamsi_date.dart';
 class JalaliDatePickerField extends StatefulWidget {
   final String labelText;
   final Function(String jalaliDate)? onChanged;
+  final DateTime? initialDate;
 
   const JalaliDatePickerField({
     super.key,
     required this.labelText,
     this.onChanged,
+    this.initialDate,
   });
 
   @override
@@ -19,10 +21,19 @@ class JalaliDatePickerField extends StatefulWidget {
 class _JalaliDatePickerFieldState extends State<JalaliDatePickerField> {
   String? _selectedDate;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialDate != null) {
+      final jalali = widget.initialDate!.toJalali();
+      _selectedDate = '${jalali.year}/${jalali.month}/${jalali.day}';
+    }
+  }
+
   void _pickDate() async {
     final result = await showJalaliDatePicker(
       context,
-      initialDate: Jalali.now(),
+      initialDate: widget.initialDate?.toJalali() ?? Jalali.now(),
       firstDate: Jalali(1390, 1, 1),
       lastDate: Jalali(1450, 12, 29),
     );

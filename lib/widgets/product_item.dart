@@ -55,7 +55,7 @@ class ProductItem extends ConsumerWidget {
                   Text(
                     product.title,
                     style: const TextStyle(
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -120,11 +120,72 @@ class ProductItem extends ConsumerWidget {
                 ],
               ),
             ),
-            IconButton(
-              onPressed: () {
-                deleteProductHandler(context, ref, product);
-              },
-              icon: Icon(Icons.delete),
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (ctx) {
+                        return DraggableScrollableSheet(
+                          expand: false,
+                          initialChildSize: 0.8,
+                          minChildSize: 0.3,
+                          maxChildSize: 0.95,
+                          builder:
+                              (_, controller) => Container(
+                                decoration: BoxDecoration(
+                                  color:
+                                      Theme.of(context).dialogBackgroundColor,
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(20),
+                                  ),
+                                ),
+                                padding: const EdgeInsets.all(16),
+                                child: ListView(
+                                  controller: controller,
+                                  children: [
+                                    Directionality(
+                                      textDirection: TextDirection.rtl,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Text(
+                                            'ویرایش بافتنی',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            onPressed:
+                                                () => Navigator.pop(context),
+                                            icon: const Icon(Icons.close),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    AddProduct(product: product),
+                                  ],
+                                ),
+                              ),
+                        );
+                      },
+                    );
+                  },
+                  icon: const Icon(Icons.edit),
+                ),
+                IconButton(
+                  onPressed: () {
+                    deleteProductHandler(context, ref, product);
+                  },
+                  icon: const Icon(Icons.delete),
+                ),
+              ],
             ),
           ],
         ),
