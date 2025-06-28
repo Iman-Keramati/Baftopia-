@@ -30,4 +30,49 @@ class CategoryService {
       throw Exception('Failed to fetch categories: $e');
     }
   }
+
+  Future<Category> updateCategory(Category category) async {
+    final supabase = Supabase.instance.client;
+
+    try {
+      final response =
+          await supabase
+              .from('categories')
+              .update({'title': category.title, 'image': category.image})
+              .eq('id', category.id)
+              .select()
+              .single();
+
+      return Category.fromJson(response);
+    } catch (e) {
+      print('Error updating category: $e');
+      throw Exception('خطا در ویرایش دسته‌بندی: $e');
+    }
+  }
+
+  Future<void> removeCategory(String id) async {
+    final supabase = Supabase.instance.client;
+
+    try {
+      final response =
+          await supabase
+              .from('categories')
+              .delete()
+              .eq('id', id)
+              .select()
+              .single();
+
+      if (response.isEmpty) {
+        throw Exception('No data returned from Supabase.');
+      }
+
+      print('Category deleted: $response');
+    } on PostgrestException catch (e) {
+      print('Supabase error: ${e.message}');
+      throw Exception('خطا هنگام حذف دسته‌بندی: ${e.message}');
+    } catch (e) {
+      print('Unexpected error: $e');
+      throw Exception('خطای غیرمنتظره هنگام حذف دسته‌بندی: $e');
+    }
+  }
 }

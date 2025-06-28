@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:baftopia/core/constants.dart';
 import 'package:baftopia/data/category_data.dart';
 import 'package:baftopia/models/category.dart';
 import 'package:baftopia/provider/category_provider.dart';
@@ -10,9 +11,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class AddCategory extends ConsumerStatefulWidget {
-  const AddCategory({super.key, this.modalContext});
-
+  final Category? category;
   final BuildContext? modalContext;
+
+  const AddCategory({super.key, this.category, this.modalContext});
 
   @override
   ConsumerState<AddCategory> createState() => _AddCategoryState();
@@ -22,7 +24,24 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
   File? _image;
+  String? _existingImageUrl;
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.category != null) {
+      _titleController.text = widget.category!.title;
+      _existingImageUrl = widget.category!.image;
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
 
   void _onPickImage(File image) {
     setState(() {
@@ -31,41 +50,47 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
   }
 
   void _onSubmit() async {
-    if (_formKey.currentState!.validate() && _image != null) {
+    if (_formKey.currentState!.validate() &&
+        (_image != null || widget.category != null)) {
       final supabase = Supabase.instance.client;
-      final categoryId = const Uuid().v4();
-      final fileExt = _image!.path.split('.').last;
-      final filePath = 'categories/$categoryId.$fileExt';
-      final fileBytes = await _image!.readAsBytes();
+      final categoryId = widget.category?.id ?? const Uuid().v4();
 
       String? publicUrl;
 
-      try {
-        setState(() => _isSubmitting = true); // 🟢 trigger loading spinner
+      if (_image != null) {
+        final fileExt = _image!.path.split('.').last;
+        final filePath = 'categories/$categoryId.$fileExt';
+        final fileBytes = await _image!.readAsBytes();
 
-        final uploadPath = await supabase.storage
-            .from('category-images')
-            .uploadBinary(
-              filePath,
-              fileBytes,
-              fileOptions: FileOptions(
-                contentType: 'image/$fileExt',
-                upsert: true,
-              ),
-            );
+        try {
+          setState(() => _isSubmitting = true);
 
-        if (uploadPath.isEmpty) throw Exception("Upload failed");
+          final uploadPath = await supabase.storage
+              .from('category-images')
+              .uploadBinary(
+                filePath,
+                fileBytes,
+                fileOptions: FileOptions(
+                  contentType: 'image/$fileExt',
+                  upsert: true,
+                ),
+              );
 
-        publicUrl = supabase.storage
-            .from('category-images')
-            .getPublicUrl(filePath);
-      } catch (e) {
-        if (!mounted) return;
-        setState(() => _isSubmitting = false); // 🔴 stop loading on failure
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('خطا در آپلود تصویر: $e')));
-        return;
+          if (uploadPath.isEmpty) throw Exception("Upload failed");
+
+          publicUrl = supabase.storage
+              .from('category-images')
+              .getPublicUrl(filePath);
+        } catch (e) {
+          if (!mounted) return;
+          setState(() => _isSubmitting = false);
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('خطا در آپلود تصویر: $e')));
+          return;
+        }
+      } else {
+        publicUrl = widget.category!.image;
       }
 
       final category = Category(
@@ -75,19 +100,27 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
       );
 
       try {
-        await CategoryService().addCategory(category);
+        if (widget.category != null) {
+          await CategoryService().updateCategory(category);
+        } else {
+          await CategoryService().addCategory(category);
+        }
 
         if (!mounted) return;
-        Navigator.of(widget.modalContext ?? context).pop(true);
+        Navigator.of(
+          widget.modalContext ?? context,
+        ).pop(widget.category != null ? category : true);
         ref.invalidate(categoryProvider);
 
         Future.microtask(() {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text(
-                'دسته بندی با موفقیت افزوده شد',
-                style: TextStyle(
+              content: Text(
+                widget.category != null
+                    ? AppTexts.categoryEdited
+                    : AppTexts.categoryAdded,
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
@@ -97,7 +130,7 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
               behavior: SnackBarBehavior.floating,
               margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
               ),
               duration: const Duration(seconds: 2),
             ),
@@ -107,15 +140,15 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطا در افزودن دسته‌بندی: $e'),
+            content: Text(
+              'خطا در ${widget.category != null ? 'ویرایش' : 'افزودن'} دسته‌بندی: $e',
+            ),
             backgroundColor: Colors.red[700],
           ),
         );
       } finally {
         if (mounted) {
-          setState(
-            () => _isSubmitting = false,
-          ); // ✅ always stop loading at the end
+          setState(() => _isSubmitting = false);
         }
       }
     }
@@ -130,10 +163,10 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
       child: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.only(
-            bottom: bottomInset + 20,
-            left: 16,
-            right: 16,
-            top: 16,
+            bottom: bottomInset + AppConstants.paddingLarge,
+            left: AppConstants.paddingMedium,
+            right: AppConstants.paddingMedium,
+            top: AppConstants.paddingMedium,
           ),
           child: Form(
             key: _formKey,
@@ -143,17 +176,22 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
               children: [
                 TextFormField(
                   controller: _titleController,
-                  decoration: InputDecoration(labelText: 'عنوان دسته بندی'),
+                  decoration: const InputDecoration(
+                    labelText: AppTexts.categoryTitle,
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'لطفاً عنوان دسته بندی را وارد کنید';
+                      return AppTexts.enterCategoryTitle;
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
-                ImageInput(onPickImage: _onPickImage),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppConstants.paddingMedium),
+                ImageInput(
+                  onPickImage: _onPickImage,
+                  existingImageUrl: _existingImageUrl,
+                ),
+                const SizedBox(height: AppConstants.paddingMedium),
                 Row(
                   children: [
                     const Spacer(),
@@ -161,39 +199,19 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: Theme.of(context).colorScheme.onSecondary,
-                          width: 2,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Text(
-                        'انصراف',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSecondary,
-                        ),
-                      ),
+                      child: Text(AppTexts.cancel),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppConstants.paddingSmall),
                     ElevatedButton.icon(
-                      icon: _isSubmitting ? null : Icon(Icons.add),
+                      icon:
+                          _isSubmitting
+                              ? null
+                              : Icon(
+                                widget.category != null
+                                    ? Icons.edit
+                                    : Icons.add,
+                              ),
                       onPressed: _isSubmitting ? null : _onSubmit,
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
-                          Theme.of(context).colorScheme.onSecondary,
-                        ),
-                        foregroundColor: MaterialStateProperty.all(
-                          Colors.white,
-                        ),
-                        shape: MaterialStateProperty.all(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                      ),
                       label:
                           _isSubmitting
                               ? const SizedBox(
@@ -206,9 +224,13 @@ class _AddCategoryState extends ConsumerState<AddCategory> {
                                   ),
                                 ),
                               )
-                              : const Text(
-                                'افزودن',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                              : Text(
+                                widget.category != null
+                                    ? AppTexts.edit
+                                    : AppTexts.add,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                     ),
                   ],

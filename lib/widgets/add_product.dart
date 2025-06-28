@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:baftopia/core/constants.dart';
 import 'package:baftopia/data/product_data.dart';
 import 'package:baftopia/models/category.dart';
 import 'package:baftopia/models/product.dart';
@@ -56,15 +57,14 @@ class _AddProductState extends ConsumerState<AddProduct> {
   Difficulty _difficultyController = Difficulty.beginner;
   Category? _categoryController;
   DateTime _dateController = DateTime.now();
-  File? _imageController; // nullable to check if selected
-  String? _existingImageUrl; // Add this for existing image URL
+  File? _imageController;
+  String? _existingImageUrl;
   final TextEditingController _descriptionController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
 
-    // If in edit mode, populate the fields
     if (widget.product != null) {
       _nameController.text = widget.product!.title;
       _timeSpentController.text = widget.product!.timeSpent;
@@ -72,9 +72,8 @@ class _AddProductState extends ConsumerState<AddProduct> {
         (d) => d.name == widget.product!.difficultyLevel,
         orElse: () => Difficulty.beginner,
       );
-      _categoryController = null;
       _dateController = widget.product!.date;
-      _existingImageUrl = widget.product!.image; // Store existing image URL
+      _existingImageUrl = widget.product!.image;
       _descriptionController.text = widget.product!.description;
     }
   }
@@ -87,24 +86,18 @@ class _AddProductState extends ConsumerState<AddProduct> {
     super.dispose();
   }
 
-  Future<String?> uploadImageToSupabase(File imageFile) async {
+  Future<String?> _uploadImageToSupabase(File imageFile) async {
     try {
       final fileBytes = await imageFile.readAsBytes();
       final fileExt = imageFile.path.split('.').last;
-      final fileName = '${const Uuid().v4()}.$fileExt'; // Unique file name
+      final fileName = '${const Uuid().v4()}.$fileExt';
       final supabase = Supabase.instance.client;
 
-      // Upload returns String path or throws on error
       await supabase.storage
           .from('product-images')
           .uploadBinary(fileName, fileBytes);
 
-      // Get public URL of the uploaded file
-      final publicUrl = supabase.storage
-          .from('product-images')
-          .getPublicUrl(fileName);
-
-      return publicUrl;
+      return supabase.storage.from('product-images').getPublicUrl(fileName);
     } catch (e) {
       debugPrint('Supabase upload error: $e');
       return null;
@@ -115,16 +108,16 @@ class _AddProductState extends ConsumerState<AddProduct> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_imageController == null && widget.product == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لطفا تصویر محصول را انتخاب کنید')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(AppTexts.selectImage)));
       return;
     }
 
     if (_categoryController == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لطفا یک دسته‌بندی انتخاب کنید')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(AppTexts.selectCategory)));
       return;
     }
 
@@ -133,12 +126,12 @@ class _AddProductState extends ConsumerState<AddProduct> {
     try {
       String imageUrl;
       if (_imageController != null) {
-        final uploadedUrl = await uploadImageToSupabase(_imageController!);
+        final uploadedUrl = await _uploadImageToSupabase(_imageController!);
         if (uploadedUrl == null) {
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('خطا در بارگذاری تصویر')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(AppTexts.uploadError)));
           return;
         }
         imageUrl = uploadedUrl;
@@ -163,7 +156,6 @@ class _AddProductState extends ConsumerState<AddProduct> {
         await ProductService().addProduct(product);
       }
 
-      // Invalidate both product and category providers to ensure UI updates
       ref.invalidate(productProvider);
       ref.invalidate(categoryProvider);
 
@@ -172,8 +164,8 @@ class _AddProductState extends ConsumerState<AddProduct> {
         SnackBar(
           content: Text(
             widget.product != null
-                ? 'بافتنی با موفقیت ویرایش شد'
-                : 'بافتنی با موفقیت افزوده شد',
+                ? AppTexts.productEdited
+                : AppTexts.productAdded,
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -184,13 +176,12 @@ class _AddProductState extends ConsumerState<AddProduct> {
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
           ),
           duration: const Duration(seconds: 2),
         ),
       );
 
-      // Pop with the updated product to update the detail view
       Navigator.of(context).pop(widget.product != null ? product : true);
     } catch (e) {
       if (!mounted) return;
@@ -212,7 +203,6 @@ class _AddProductState extends ConsumerState<AddProduct> {
 
     return categoriesAsync.when(
       data: (categories) {
-        // Initialize category in build where categories are available
         if (_categoryController == null && categories.isNotEmpty) {
           if (widget.product != null) {
             _categoryController = categories.firstWhere(
@@ -230,10 +220,12 @@ class _AddProductState extends ConsumerState<AddProduct> {
             key: _formKey,
             child: SingleChildScrollView(
               padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                left: AppConstants.paddingMedium,
+                right: AppConstants.paddingMedium,
+                top: AppConstants.paddingMedium,
+                bottom:
+                    MediaQuery.of(context).viewInsets.bottom +
+                    AppConstants.paddingMedium,
               ),
               child: Column(
                 children: [
@@ -243,11 +235,13 @@ class _AddProductState extends ConsumerState<AddProduct> {
                     validator:
                         (value) =>
                             (value == null || value.isEmpty)
-                                ? 'لطفا نام محصول را وارد کنید'
+                                ? AppTexts.enterName
                                 : null,
-                    decoration: const InputDecoration(labelText: 'نام'),
+                    decoration: const InputDecoration(
+                      labelText: AppTexts.productName,
+                    ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppConstants.paddingSmall),
                   DropdownButtonFormField<Difficulty>(
                     value: _difficultyController,
                     items:
@@ -264,11 +258,11 @@ class _AddProductState extends ConsumerState<AddProduct> {
                         setState(() => _difficultyController = val);
                       }
                     },
-                    decoration: const InputDecoration(labelText: 'سطح دشواری'),
+                    decoration: const InputDecoration(
+                      labelText: AppTexts.productDifficulty,
+                    ),
                   ),
-                  const SizedBox(height: 10),
-
-                  // Category dropdown
+                  const SizedBox(height: AppConstants.paddingSmall),
                   DropdownButtonFormField<Category>(
                     value: _categoryController,
                     items:
@@ -285,31 +279,30 @@ class _AddProductState extends ConsumerState<AddProduct> {
                         setState(() => _categoryController = val);
                       }
                     },
-                    decoration: const InputDecoration(labelText: 'دسته بندی'),
+                    decoration: const InputDecoration(
+                      labelText: AppTexts.productCategory,
+                    ),
                     validator:
                         (value) =>
-                            value == null
-                                ? 'لطفا دسته بندی را انتخاب کنید'
-                                : null,
+                            value == null ? AppTexts.selectCategory : null,
                   ),
-
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppConstants.paddingSmall),
                   TextFormField(
                     maxLength: 50,
                     controller: _timeSpentController,
                     validator:
                         (value) =>
                             (value == null || value.isEmpty)
-                                ? 'لطفا زمان صرف شده را وارد کنید'
+                                ? AppTexts.enterTimeSpent
                                 : null,
                     decoration: const InputDecoration(
-                      labelText: 'زمان صرف شده',
+                      labelText: AppTexts.productTimeSpent,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppConstants.paddingSmall),
                   JalaliDatePickerField(
-                    labelText: 'تاریخ پایان',
-                    initialDate: _dateController, // Add initial date
+                    labelText: AppTexts.productDate,
+                    initialDate: _dateController,
                     onChanged: (jalaliDate) {
                       final parts = jalaliDate.split('/');
                       final jalali = Jalali(
@@ -327,37 +320,25 @@ class _AddProductState extends ConsumerState<AddProduct> {
                       });
                     },
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppConstants.paddingSmall),
                   ImageInput(
                     onPickImage:
                         (file) => setState(() => _imageController = file),
-                    existingImageUrl:
-                        _existingImageUrl, // Pass existing image URL
+                    existingImageUrl: _existingImageUrl,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppConstants.paddingLarge),
                   TextFormField(
                     controller: _descriptionController,
-                    decoration: const InputDecoration(labelText: 'توضیحات'),
+                    decoration: const InputDecoration(
+                      labelText: AppTexts.productDescription,
+                    ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppConstants.paddingSmall),
                   Row(
                     children: [
-                      Spacer(),
+                      const Spacer(),
                       ElevatedButton(
                         onPressed: _isSubmitting ? null : _onSubmit,
-                        style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all(
-                            Theme.of(context).colorScheme.onSecondary,
-                          ),
-                          foregroundColor: MaterialStateProperty.all(
-                            Colors.white,
-                          ),
-                          shape: MaterialStateProperty.all(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                        ),
                         child:
                             _isSubmitting
                                 ? const SizedBox(
@@ -371,7 +352,9 @@ class _AddProductState extends ConsumerState<AddProduct> {
                                   ),
                                 )
                                 : Text(
-                                  widget.product != null ? 'ویرایش' : 'افزودن',
+                                  widget.product != null
+                                      ? AppTexts.edit
+                                      : AppTexts.add,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),
