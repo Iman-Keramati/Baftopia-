@@ -99,7 +99,7 @@ lib/
 
 - **Persian Font**: Vazirmatn (Regular, Medium, Bold, Light)
 - **English Font**: Poppins
-- **Consistent Text Sizes**: 12px, 16px, 20px, 24px, 32px
+- **Consistent Text Sizes**: 14px, 16px, 20px, 24px, 32px
 
 ### Spacing
 

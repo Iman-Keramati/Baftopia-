@@ -2,6 +2,7 @@ import 'package:baftopia/provider/category_provider.dart';
 import 'package:baftopia/widgets/add_category.dart';
 import 'package:baftopia/widgets/category_item.dart';
 import 'package:baftopia/widgets/floating_button.dart';
+import 'package:baftopia/widgets/side_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,10 +12,19 @@ class CategoriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(categoryProvider);
+    final scaffoldKey = GlobalKey<ScaffoldState>();
 
     return Scaffold(
       floatingActionButton: FloatingButton(),
+      key: scaffoldKey,
+      drawer: const SideMenu(),
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.density_medium),
+          onPressed: () {
+            scaffoldKey.currentState?.openDrawer();
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -22,13 +32,11 @@ class CategoriesScreen extends ConsumerWidget {
               final result = await showModalBottomSheet<bool>(
                 context: context,
                 isScrollControlled: true,
-                builder: (ctx) => AddCategory(modalContext: ctx), // just this
+                builder: (ctx) => AddCategory(modalContext: ctx),
               );
 
               if (result == true) {
-                ref.invalidate(
-                  categoryProvider,
-                ); // or trigger via notifier if you use StateNotifier
+                ref.invalidate(categoryProvider);
               }
             },
           ),
@@ -44,6 +52,7 @@ class CategoriesScreen extends ConsumerWidget {
             ),
           ],
         ),
+        centerTitle: true,
       ),
       body: categoriesAsync.when(
         data:
