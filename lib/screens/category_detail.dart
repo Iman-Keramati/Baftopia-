@@ -136,7 +136,20 @@ class CategoryDetailScreen extends ConsumerWidget {
           );
         },
       ),
-      floatingActionButton: FloatingButton(),
+      floatingActionButton: FloatingButton(
+        onPressed: () async {
+          final newProduct = await Navigator.of(
+            context,
+          ).pushNamed('/add-product', arguments: category);
+          if (newProduct != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('محصول جدید اضافه شد')),
+            );
+            ref.invalidate(productProvider);
+          }
+        },
+        tooltip: 'افزودن بافتنی جدید',
+      ),
     );
   }
 }
