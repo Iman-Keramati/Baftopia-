@@ -104,7 +104,7 @@ class AppTheme {
         ),
       ),
 
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 3,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
@@ -205,7 +205,7 @@ class AppTheme {
         ),
       ),
 
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: AppConstants.surfaceColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppConstants.radiusLarge),

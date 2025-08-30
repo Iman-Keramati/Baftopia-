@@ -36,7 +36,7 @@ class AppConstants {
   static const double imageSizeLarge = 350.0;
 
   // Text Sizes
-  static const double textSizeSmall = 12.0;
+  static const double textSizeSmall = 14.0;
   static const double textSizeMedium = 16.0;
   static const double textSizeLarge = 20.0;
   static const double textSizeXLarge = 24.0;
