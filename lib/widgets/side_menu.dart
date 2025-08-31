@@ -104,14 +104,20 @@ class _SideMenuState extends State<SideMenu> {
                           const SizedBox(height: 16),
                           Text(
                             userName,
-                            style: Theme.of(context).textTheme.titleMedium,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 24,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                           if (userRole != null) ...[
                             const SizedBox(height: 8),
                             Text(
                               'نقش: ${userRole == 'admin' ? 'مدیر' : 'کاربر'}',
-                              style: Theme.of(context).textTheme.bodyMedium,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
                               textAlign: TextAlign.center,
                             ),
                           ],

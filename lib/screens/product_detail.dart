@@ -1,4 +1,5 @@
 import 'package:baftopia/models/product.dart';
+import 'package:baftopia/provider/favorites_provider.dart';
 import 'package:baftopia/utils/delete_product.dart';
 import 'package:baftopia/widgets/add_product.dart';
 import 'package:flutter/material.dart';
@@ -21,9 +22,21 @@ class ProductDetail extends ConsumerWidget {
       );
     }
 
+    final favorites = ref.watch(favoritesProvider);
+    final isFavorite = favorites.any((item) => item.id == product.id);
+
     return Scaffold(
       appBar: AppBar(
         actions: [
+          IconButton(
+            icon: Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: isFavorite ? Colors.red : null,
+            ),
+            onPressed: () {
+              ref.read(favoritesProvider.notifier).toggleFavorite(product.id);
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () async {
