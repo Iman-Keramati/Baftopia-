@@ -5,7 +5,6 @@ class AdminChecker {
     try {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) return false;
-
       // Get user metadata from Supabase
       final userMetadata = user.userMetadata;
       final role = userMetadata?['role'] as String?;

@@ -1,4 +1,5 @@
 import 'package:baftopia/provider/category_provider.dart';
+import 'package:baftopia/screens/favorites.dart';
 import 'package:baftopia/widgets/add_category.dart';
 import 'package:baftopia/widgets/category_item.dart';
 import 'package:baftopia/widgets/floating_button.dart';
@@ -6,6 +7,7 @@ import 'package:baftopia/widgets/side_menu.dart';
 import 'package:baftopia/widgets/add_product.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../provider/user_provider.dart';
 
 class CategoriesScreen extends ConsumerWidget {
   const CategoriesScreen({super.key});
@@ -112,24 +114,62 @@ class CategoriesScreen extends ConsumerWidget {
       drawer: const SideMenu(),
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.density_medium),
+          icon: const Icon(Icons.person_outlined),
           onPressed: () {
             scaffoldKey.currentState?.openDrawer();
           },
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () async {
-              final result = await showModalBottomSheet<bool>(
-                context: context,
-                isScrollControlled: true,
-                builder: (ctx) => AddCategory(modalContext: ctx),
-              );
+          Consumer(
+            builder: (context, ref, _) {
+              final userState = ref.watch(userProvider);
 
-              if (result == true) {
-                ref.invalidate(categoryProvider);
+              // فقط اگر admin هست، دکمه + نمایش داده بشه
+              if (userState.isAdmin) {
+                return IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () async {
+                    final result = await showModalBottomSheet<bool>(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (ctx) => AddCategory(modalContext: ctx),
+                    );
+
+                    if (result == true) {
+                      ref.invalidate(categoryProvider);
+                    }
+                  },
+                );
               }
+
+              return const SizedBox.shrink();
+            },
+          ),
+          Consumer(
+            builder: (context, ref, _) {
+              final userState = ref.watch(userProvider);
+
+              return IconButton(
+                icon: const Icon(Icons.favorite_outline_outlined),
+                onPressed: () {
+                  if (!userState.isLoggedIn) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          textAlign: TextAlign.right,
+                          'برای مشاهده علاقه‌مندی‌ها باید وارد شوید',
+                        ),
+                      ),
+                    );
+                  } else {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const FavoritesScreen(),
+                      ),
+                    );
+                  }
+                },
+              );
             },
           ),
         ],
@@ -146,6 +186,7 @@ class CategoriesScreen extends ConsumerWidget {
         ),
         centerTitle: true,
       ),
+
       body: categoriesAsync.when(
         data:
             (categories) =>
