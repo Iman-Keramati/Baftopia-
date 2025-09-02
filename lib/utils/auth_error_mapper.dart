@@ -28,7 +28,16 @@ class AuthErrorMapper {
       }
       return 'خطای دیتابیس: ${error.message}';
     } else if (error is Exception) {
-      return 'خطا: ${error.toString()}';
+      final errStr = error.toString();
+
+      if (errStr.contains('Failed host lookup')) {
+        return 'عدم دسترسی به سرور. لطفاً اتصال اینترنت خود را بررسی کنید.';
+      }
+      if (errStr.contains('SocketException')) {
+        return 'مشکل در ارتباط با سرور. لطفاً دوباره تلاش کنید.';
+      }
+
+      return 'خطا: $errStr';
     }
 
     return 'یه مشکل غیرمنتظره پیش اومد: $error';

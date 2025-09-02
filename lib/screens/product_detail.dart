@@ -1,4 +1,5 @@
 import 'package:baftopia/models/product.dart';
+import 'package:baftopia/provider/favorites_provider.dart';
 import 'package:baftopia/utils/delete_product.dart';
 import 'package:baftopia/widgets/add_product.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_jalali_date_picker/flutter_jalali_date_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import 'package:transparent_image/transparent_image.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProductDetail extends ConsumerWidget {
   const ProductDetail({super.key, required this.product});
@@ -21,9 +23,53 @@ class ProductDetail extends ConsumerWidget {
       );
     }
 
+    final favorites = ref.watch(favoritesProvider);
+    final isFavorite = favorites.any((item) => item.id == product.id);
+    print('is favorite$isFavorite');
+
+    final images = product.images.isNotEmpty ? product.images : [product.image];
+
     return Scaffold(
       appBar: AppBar(
         actions: [
+          IconButton(
+            icon: Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: isFavorite ? Colors.red : null,
+            ),
+            onPressed: () async {
+              final user = Supabase.instance.client.auth.currentUser;
+              if (user == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'برای افزودن به علاقه‌مندی‌ها ابتدا وارد شوید',
+                      textAlign: TextAlign.right,
+                    ),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+                return;
+              }
+              await ref
+                  .read(favoritesProvider.notifier)
+                  .toggleFavorite(product.id);
+              final nowFavorite = ref
+                  .read(favoritesProvider)
+                  .any((item) => item.id == product.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    nowFavorite
+                        ? 'به علاقه‌مندی‌ها اضافه شد'
+                        : 'از علاقه‌مندی‌ها حذف شد',
+                    textAlign: TextAlign.right,
+                  ),
+                  duration: const Duration(seconds: 1),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () async {
@@ -118,10 +164,15 @@ class ProductDetail extends ConsumerWidget {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
-                    child: FadeInImage(
-                      placeholder: MemoryImage(kTransparentImage),
-                      image: NetworkImage(product.image),
-                      fit: BoxFit.cover,
+                    child: PageView.builder(
+                      itemCount: images.length,
+                      itemBuilder:
+                          (_, i) => FadeInImage(
+                            placeholder: MemoryImage(kTransparentImage),
+                            image: NetworkImage(images[i]),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
                     ),
                   ),
                 ),

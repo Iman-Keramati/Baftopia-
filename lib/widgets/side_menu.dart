@@ -25,7 +25,9 @@ class _SideMenuState extends State<SideMenu> {
   }
 
   void _handleSignUpSuccess() {
-    _closeMenu();
+    setState(() {
+      _showSignUp = false;
+    });
   }
 
   void _handleSignInSuccess() {
@@ -38,6 +40,17 @@ class _SideMenuState extends State<SideMenu> {
     final isAdmin = AdminChecker.isAdmin();
     final userRole = AdminChecker.getUserRole();
 
+    print('isLoggedIn: $isLoggedIn, isAdmin: $isAdmin, userRole: $userRole');
+
+    // Get user data if logged in
+    final user = isLoggedIn ? Supabase.instance.client.auth.currentUser : null;
+    final userName =
+        user?.userMetadata?['display_name'] ??
+        user?.userMetadata?['email'] ??
+        user?.email?.split('@').first ??
+        'کاربر';
+    final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'U';
+
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Drawer(
@@ -47,7 +60,7 @@ class _SideMenuState extends State<SideMenu> {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Close button at the top
@@ -60,11 +73,6 @@ class _SideMenuState extends State<SideMenu> {
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
-                      if (isLoggedIn)
-                        Text(
-                          'پروفایل',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -81,21 +89,35 @@ class _SideMenuState extends State<SideMenu> {
                     Center(
                       child: Column(
                         children: [
-                          const CircleAvatar(
+                          CircleAvatar(
                             radius: 36,
-                            child: Icon(Icons.person, size: 40),
+                            backgroundColor: Theme.of(context).primaryColor,
+                            child: Text(
+                              userInitial,
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'کاربر وارد شده',
-                            style: Theme.of(context).textTheme.titleMedium,
+                            userName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 24,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                           if (userRole != null) ...[
                             const SizedBox(height: 8),
                             Text(
                               'نقش: ${userRole == 'admin' ? 'مدیر' : 'کاربر'}',
-                              style: Theme.of(context).textTheme.bodyMedium,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
                               textAlign: TextAlign.center,
                             ),
                           ],

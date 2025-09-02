@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:baftopia/utils/admin_checker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../provider/user_provider.dart';
 
-class FloatingButton extends StatelessWidget {
+class FloatingButton extends ConsumerWidget {
   final VoidCallback onPressed;
   final String? tooltip;
 
   const FloatingButton({super.key, required this.onPressed, this.tooltip});
 
   @override
-  Widget build(BuildContext context) {
-    if (!AdminChecker.isAdmin()) return const SizedBox.shrink();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userState = ref.watch(userProvider);
+
+    // فقط وقتی لاگین و admin هست
+    if (!userState.isLoggedIn || !userState.isAdmin)
+      return const SizedBox.shrink();
 
     return FloatingActionButton(
       onPressed: onPressed,

@@ -6,7 +6,7 @@ import 'package:baftopia/models/category.dart';
 import 'package:baftopia/models/product.dart';
 import 'package:baftopia/provider/category_provider.dart';
 import 'package:baftopia/provider/product_provider.dart';
-import 'package:baftopia/widgets/image_input.dart';
+import 'package:baftopia/widgets/multi_image_input.dart';
 import 'package:baftopia/widgets/persian_date_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -42,7 +42,8 @@ extension DifficultyExtension on Difficulty {
 
 class AddProduct extends ConsumerStatefulWidget {
   final ProductModel? product;
-  const AddProduct({super.key, this.product});
+  final Category? initialCategory;
+  const AddProduct({super.key, this.product, this.initialCategory});
 
   @override
   ConsumerState<AddProduct> createState() => _AddProductState();
@@ -57,8 +58,8 @@ class _AddProductState extends ConsumerState<AddProduct> {
   Difficulty _difficultyController = Difficulty.beginner;
   Category? _categoryController;
   DateTime _dateController = DateTime.now();
-  File? _imageController;
-  String? _existingImageUrl;
+  List<File> _imageFiles = [];
+  List<String> _existingImageUrls = [];
   final TextEditingController _descriptionController = TextEditingController();
 
   @override
@@ -73,7 +74,7 @@ class _AddProductState extends ConsumerState<AddProduct> {
         orElse: () => Difficulty.beginner,
       );
       _dateController = widget.product!.date;
-      _existingImageUrl = widget.product!.image;
+      _existingImageUrls = [widget.product!.image];
       _descriptionController.text = widget.product!.description;
     }
   }
@@ -107,7 +108,10 @@ class _AddProductState extends ConsumerState<AddProduct> {
   Future<void> _onSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_imageController == null && widget.product == null) {
+    final hasExisting = _existingImageUrls.isNotEmpty;
+    final hasPicked = _imageFiles.isNotEmpty;
+
+    if (!hasExisting && !hasPicked) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(AppTexts.selectImage)));
@@ -121,28 +125,43 @@ class _AddProductState extends ConsumerState<AddProduct> {
       return;
     }
 
+    if (_imageFiles.length > 10) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('حداکثر ۱۰ تصویر مجاز است')));
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
-      String imageUrl;
-      if (_imageController != null) {
-        final uploadedUrl = await _uploadImageToSupabase(_imageController!);
-        if (uploadedUrl == null) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(AppTexts.uploadError)));
-          return;
+      List<String> uploadedUrls = [];
+      if (hasPicked) {
+        for (final file in _imageFiles) {
+          final url = await _uploadImageToSupabase(file);
+          if (url == null) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(AppTexts.uploadError)));
+            return;
+          }
+          uploadedUrls.add(url);
         }
-        imageUrl = uploadedUrl;
-      } else {
-        imageUrl = widget.product!.image;
       }
+
+      final representativeImageUrl =
+          uploadedUrls.isNotEmpty
+              ? uploadedUrls.first
+              : (hasExisting ? _existingImageUrls.first : '');
+
+      final allImages = <String>[..._existingImageUrls, ...uploadedUrls];
 
       final product = ProductModel(
         id: widget.product?.id ?? const Uuid().v4(),
         title: _nameController.text.trim(),
-        image: imageUrl,
+        image: representativeImageUrl,
+        images: allImages,
         date: _dateController,
         timeSpent: _timeSpentController.text.trim(),
         difficultyLevel: _difficultyController.name,
@@ -207,6 +226,11 @@ class _AddProductState extends ConsumerState<AddProduct> {
           if (widget.product != null) {
             _categoryController = categories.firstWhere(
               (cat) => cat.id == widget.product!.category.id,
+              orElse: () => categories.first,
+            );
+          } else if (widget.initialCategory != null) {
+            _categoryController = categories.firstWhere(
+              (cat) => cat.id == widget.initialCategory!.id,
               orElse: () => categories.first,
             );
           } else {
@@ -321,10 +345,11 @@ class _AddProductState extends ConsumerState<AddProduct> {
                     },
                   ),
                   const SizedBox(height: AppConstants.paddingSmall),
-                  ImageInput(
-                    onPickImage:
-                        (file) => setState(() => _imageController = file),
-                    existingImageUrl: _existingImageUrl,
+                  MultiImageInput(
+                    onPickImages:
+                        (files) => setState(() => _imageFiles = files),
+                    existingImageUrls: _existingImageUrls,
+                    maxImages: 10,
                   ),
                   const SizedBox(height: AppConstants.paddingLarge),
                   TextFormField(
