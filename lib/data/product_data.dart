@@ -12,6 +12,7 @@ class ProductService {
               'id': product.id,
               'title': product.title,
               'image': product.image,
+              'images': product.images,
               'date': product.date.toIso8601String(),
               'time_spent': product.timeSpent,
               'difficulty_level': product.difficultyLevel,
@@ -77,6 +78,7 @@ class ProductService {
               .update({
                 'title': product.title,
                 'image': product.image,
+                'images': product.images,
                 'date': product.date.toIso8601String(),
                 'time_spent': product.timeSpent,
                 'difficulty_level': product.difficultyLevel,

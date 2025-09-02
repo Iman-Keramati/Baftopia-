@@ -2,9 +2,9 @@ import 'package:baftopia/models/category.dart';
 import 'package:baftopia/provider/product_provider.dart';
 import 'package:baftopia/utils/delete_category.dart';
 import 'package:baftopia/widgets/add_category.dart';
-import 'package:baftopia/widgets/add_product.dart';
+import 'package:baftopia/widgets/add_content_sheet.dart';
 import 'package:baftopia/widgets/floating_button.dart';
-import 'package:baftopia/widgets/product_item.dart';
+import 'package:baftopia/widgets/product_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,13 +15,6 @@ class CategoryDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productsAsync = ref.watch(productProvider);
-
-    Difficulty difficultyFromString(String value) {
-      return Difficulty.values.firstWhere(
-        (d) => d.name == value,
-        orElse: () => Difficulty.beginner,
-      );
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -119,34 +112,32 @@ class CategoryDetailScreen extends ConsumerWidget {
 
           return Directionality(
             textDirection: TextDirection.rtl,
-            child: ListView.separated(
+            child: GridView.builder(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
               itemCount: filteredProducts.length,
               itemBuilder: (context, index) {
                 final product = filteredProducts[index];
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: ProductItem(product: product),
-                );
+                return ProductCard(product: product);
               },
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
             ),
           );
         },
       ),
       floatingActionButton: FloatingButton(
         onPressed: () async {
-          final newProduct = await Navigator.of(
-            context,
-          ).pushNamed('/add-product', arguments: category);
-          if (newProduct != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('محصول جدید اضافه شد')),
-            );
-            ref.invalidate(productProvider);
-          }
+          await showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (ctx) => AddContentSheet(initialCategory: category),
+          );
         },
         tooltip: 'افزودن بافتنی جدید',
       ),

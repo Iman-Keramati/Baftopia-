@@ -27,6 +27,8 @@ class ProductDetail extends ConsumerWidget {
     final isFavorite = favorites.any((item) => item.id == product.id);
     print('is favorite$isFavorite');
 
+    final images = product.images.isNotEmpty ? product.images : [product.image];
+
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -162,10 +164,15 @@ class ProductDetail extends ConsumerWidget {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
-                    child: FadeInImage(
-                      placeholder: MemoryImage(kTransparentImage),
-                      image: NetworkImage(product.image),
-                      fit: BoxFit.cover,
+                    child: PageView.builder(
+                      itemCount: images.length,
+                      itemBuilder:
+                          (_, i) => FadeInImage(
+                            placeholder: MemoryImage(kTransparentImage),
+                            image: NetworkImage(images[i]),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
                     ),
                   ),
                 ),

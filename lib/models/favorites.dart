@@ -10,6 +10,7 @@ class FavoriteModel extends ProductModel {
     required String title,
     required String description,
     required String image,
+    required List<String> images,
     required DateTime date,
     required String timeSpent,
     required String difficultyLevel,
@@ -19,6 +20,7 @@ class FavoriteModel extends ProductModel {
          title: title,
          description: description,
          image: image,
+         images: images,
          date: date,
          timeSpent: timeSpent,
          difficultyLevel: difficultyLevel,
@@ -27,12 +29,19 @@ class FavoriteModel extends ProductModel {
 
   factory FavoriteModel.fromMap(Map<String, dynamic> map) {
     final product = (map['products'] ?? {}) as Map<String, dynamic>;
+    final dynamic imagesRaw = product['images'];
+    final List<String> parsedImages =
+        imagesRaw is List
+            ? imagesRaw.map((e) => e.toString()).toList()
+            : <String>[];
+
     return FavoriteModel(
       favoriteId: map['id'] as String,
       id: (product['id'] ?? map['product_id']) as String,
       title: (product['title'] ?? '') as String,
       description: (product['description'] ?? '') as String,
       image: (product['image'] ?? '') as String,
+      images: parsedImages,
       date:
           product['date'] != null
               ? DateTime.parse(product['date'] as String)
