@@ -1,10 +1,12 @@
 import 'package:baftopia/models/product.dart';
+import 'package:baftopia/provider/favorites_provider.dart';
 import 'package:baftopia/screens/product_detail.dart';
 import 'package:baftopia/utils/delete_product.dart';
 import 'package:baftopia/widgets/add_product.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:transparent_image/transparent_image.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProductItem extends ConsumerWidget {
   const ProductItem({super.key, required this.product});
@@ -19,6 +21,9 @@ class ProductItem extends ConsumerWidget {
         orElse: () => Difficulty.beginner,
       );
     }
+
+    final favorites = ref.watch(favoritesProvider);
+    final isFavorite = favorites.any((f) => f.id == product.id);
 
     return InkWell(
       onTap: () {
@@ -117,11 +122,63 @@ class ProductItem extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  if (product.description.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      product.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSecondaryContainer.withOpacity(0.8),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
-            Row(
+            Column(
               children: [
+                IconButton(
+                  onPressed: () async {
+                    final user = Supabase.instance.client.auth.currentUser;
+                    if (user == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'برای افزودن به علاقه‌مندی‌ها ابتدا وارد شوید',
+                            textAlign: TextAlign.right,
+                          ),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                      return;
+                    }
+                    await ref
+                        .read(favoritesProvider.notifier)
+                        .toggleFavorite(product.id);
+                    final nowFavorite = ref
+                        .read(favoritesProvider)
+                        .any((f) => f.id == product.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          nowFavorite
+                              ? 'به علاقه‌مندی‌ها اضافه شد'
+                              : 'از علاقه‌مندی‌ها حذف شد',
+                          textAlign: TextAlign.right,
+                        ),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? Colors.red : null,
+                  ),
+                ),
                 IconButton(
                   onPressed: () {
                     showModalBottomSheet(

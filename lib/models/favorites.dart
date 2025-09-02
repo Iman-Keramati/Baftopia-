@@ -9,13 +9,11 @@ class FavoriteModel extends ProductModel {
     required String id,
     required String title,
     required String description,
-    required double price,
     required String image,
     required DateTime date,
     required String timeSpent,
     required String difficultyLevel,
     required Category category,
-    // بقیه فیلدهای Product...
   }) : super(
          id: id,
          title: title,
@@ -28,17 +26,23 @@ class FavoriteModel extends ProductModel {
        );
 
   factory FavoriteModel.fromMap(Map<String, dynamic> map) {
+    final product = (map['products'] ?? {}) as Map<String, dynamic>;
     return FavoriteModel(
-      favoriteId: map['id'], // id جدول favorites
-      id: map['product_id'], // id محصول
-      title: map['products']?['title'] ?? '',
-      description: map['products']?['description'] ?? '',
-      price: (map['products']?['price'] ?? 0).toDouble(),
-      image: map['products']?['image'] ?? '',
-      date: map['products']?['date'] ?? '',
-      timeSpent: map['products']?['timeSpent'] ?? '',
-      difficultyLevel: map['products']?['difficultyLevel'] ?? '',
-      category: map['products']?['category'] ?? '',
+      favoriteId: map['id'] as String,
+      id: (product['id'] ?? map['product_id']) as String,
+      title: (product['title'] ?? '') as String,
+      description: (product['description'] ?? '') as String,
+      image: (product['image'] ?? '') as String,
+      date:
+          product['date'] != null
+              ? DateTime.parse(product['date'] as String)
+              : DateTime.now(),
+      timeSpent: (product['time_spent'] ?? '') as String,
+      difficultyLevel: (product['difficulty_level'] ?? '') as String,
+      category:
+          product['categories'] != null
+              ? Category.fromJson(product['categories'] as Map<String, dynamic>)
+              : const Category(id: '', title: '', image: ''),
     );
   }
 }

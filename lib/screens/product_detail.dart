@@ -7,6 +7,7 @@ import 'package:flutter_jalali_date_picker/flutter_jalali_date_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import 'package:transparent_image/transparent_image.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProductDetail extends ConsumerWidget {
   const ProductDetail({super.key, required this.product});
@@ -24,6 +25,7 @@ class ProductDetail extends ConsumerWidget {
 
     final favorites = ref.watch(favoritesProvider);
     final isFavorite = favorites.any((item) => item.id == product.id);
+    print('is favorite$isFavorite');
 
     return Scaffold(
       appBar: AppBar(
@@ -33,8 +35,37 @@ class ProductDetail extends ConsumerWidget {
               isFavorite ? Icons.favorite : Icons.favorite_border,
               color: isFavorite ? Colors.red : null,
             ),
-            onPressed: () {
-              ref.read(favoritesProvider.notifier).toggleFavorite(product.id);
+            onPressed: () async {
+              final user = Supabase.instance.client.auth.currentUser;
+              if (user == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'برای افزودن به علاقه‌مندی‌ها ابتدا وارد شوید',
+                      textAlign: TextAlign.right,
+                    ),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+                return;
+              }
+              await ref
+                  .read(favoritesProvider.notifier)
+                  .toggleFavorite(product.id);
+              final nowFavorite = ref
+                  .read(favoritesProvider)
+                  .any((item) => item.id == product.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    nowFavorite
+                        ? 'به علاقه‌مندی‌ها اضافه شد'
+                        : 'از علاقه‌مندی‌ها حذف شد',
+                    textAlign: TextAlign.right,
+                  ),
+                  duration: const Duration(seconds: 1),
+                ),
+              );
             },
           ),
           IconButton(

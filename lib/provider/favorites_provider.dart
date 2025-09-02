@@ -18,56 +18,68 @@ class FavoritesProvider extends StateNotifier<List<FavoriteModel>> {
   final _client = Supabase.instance.client;
 
   Future<void> loadFavorites() async {
-    final userState = ref.read(userProvider);
-    if (!userState.isLoggedIn) return;
-
     final user = _client.auth.currentUser;
     if (user == null) return;
 
     final response = await _client
         .from('favorites')
-        .select()
+        .select('*, products(*, categories(*))')
         .eq('user_id', user.id);
 
-    final data = response as List<dynamic>;
-    state = data.map((e) => FavoriteModel.fromMap(e)).toList();
+    if (response is List) {
+      state = response.map((e) => FavoriteModel.fromMap(e)).toList();
+    }
   }
 
   Future<void> addFavorite(String productId) async {
     final user = _client.auth.currentUser;
     if (user == null) return;
 
-    await _client.from('favorites').insert({
-      'user_id': user.id,
-      'product_id': productId,
-    });
+    final inserted =
+        await _client
+            .from('favorites')
+            .upsert({
+              'user_id': user.id,
+              'product_id': productId,
+            }, onConflict: 'user_id,product_id')
+            .select('*, products(*, categories(*))')
+            .single();
 
-    await loadFavorites();
+    final newFav = FavoriteModel.fromMap(inserted);
+    state = [...state, newFav];
   }
 
   Future<void> removeFavorite(String productId) async {
     final user = _client.auth.currentUser;
     if (user == null) return;
 
+    // Optimistic update first
+    state = state.where((f) => f.id != productId).toList();
+
+    // Then persist to Supabase
     await _client
         .from('favorites')
         .delete()
         .eq('user_id', user.id)
         .eq('product_id', productId);
-
-    await loadFavorites();
   }
 
-  /// 🔥 New method to toggle on/off favorites
   Future<void> toggleFavorite(String productId) async {
-    final isAlreadyFavorite = state.any(
-      (favorite) => favorite.favoriteId == productId,
-    );
+    final alreadyFavorite = state.any((f) => f.id == productId);
 
-    if (isAlreadyFavorite) {
+    if (alreadyFavorite) {
       await removeFavorite(productId);
     } else {
-      await addFavorite(productId);
+      try {
+        await addFavorite(productId);
+      } on PostgrestException catch (e) {
+        if (e.code == '23505') {
+          // ignore duplicate insert, just reload
+          await loadFavorites();
+        } else {
+          rethrow;
+        }
+      }
     }
   }
 
