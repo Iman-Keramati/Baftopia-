@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:baftopia/screens/categories.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:baftopia/screens/main_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -26,7 +26,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       // Wait for fade out, then navigate (no back stack)
       Timer(const Duration(milliseconds: 700), () {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (ctx) => const CategoriesScreen()),
+          MaterialPageRoute(builder: (ctx) => const MainScreen()),
         );
       });
     });

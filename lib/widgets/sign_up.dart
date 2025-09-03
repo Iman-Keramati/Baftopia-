@@ -64,15 +64,12 @@ class _SignUpWidgetState extends State<SignUpWidget> {
             'ثبت نام با موفقیت انجام شد. لطفا ایمیل خود را برای تایید حساب کنید.';
       });
 
-      // Show toast message
       _showToast('ثبت نام با موفقیت انجام شد!');
 
-      // Call the success callback to close sidebar
       if (widget.onSuccess != null) {
         widget.onSuccess!();
       }
 
-      // Clear form after successful signup
       _emailController.clear();
       _passwordController.clear();
       _displayNameController.clear();
@@ -87,11 +84,43 @@ class _SignUpWidgetState extends State<SignUpWidget> {
     }
   }
 
+  InputDecoration _decoration(String label, {IconData? icon}) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: icon != null ? Icon(icon) : null,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color: Theme.of(context).primaryColor,
+          width: 1.4,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Padding(
+      child: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -100,9 +129,9 @@ class _SignUpWidgetState extends State<SignUpWidget> {
             children: [
               TextFormField(
                 controller: _displayNameController,
-                decoration: const InputDecoration(
-                  labelText: 'نام و نام خانوادگی',
-                  border: OutlineInputBorder(),
+                decoration: _decoration(
+                  'نام و نام خانوادگی',
+                  icon: Icons.person_outline,
                 ),
                 validator:
                     (value) =>
@@ -110,13 +139,10 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                             ? 'نام و نام خانوادگی را وارد کنید'
                             : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'ایمیل',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: _decoration('ایمیل', icon: Icons.email_outlined),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -128,13 +154,10 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'رمز عبور',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: _decoration('رمز عبور', icon: Icons.lock_outline),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -146,11 +169,11 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               if (_error != null)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
                     _error!,
                     style: const TextStyle(color: Colors.red, fontSize: 14),
@@ -160,7 +183,7 @@ class _SignUpWidgetState extends State<SignUpWidget> {
 
               if (_success != null)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
                     _success!,
                     style: const TextStyle(color: Colors.green, fontSize: 14),
@@ -174,6 +197,9 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                   onPressed: _loading ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   child:
                       _loading

@@ -45,7 +45,6 @@ class _SignInWidgetState extends State<SignInWidget> {
         _success = 'ورود موفقیت‌آمیز بود!';
       });
 
-      // Call success callback after a short delay
       Future.delayed(const Duration(seconds: 1), () {
         widget.onSuccess?.call();
       });
@@ -104,133 +103,172 @@ class _SignInWidgetState extends State<SignInWidget> {
     }
   }
 
+  InputDecoration _decoration(String label, {IconData? icon}) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: icon != null ? Icon(icon) : null,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color: Theme.of(context).primaryColor,
+          width: 1.4,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextFormField(
-            controller: _emailController,
-            decoration: const InputDecoration(
-              labelText: 'ایمیل',
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'لطفاً ایمیل خود را وارد کنید';
-              }
-              if (!value.contains('@')) {
-                return 'لطفاً ایمیل معتبر وارد کنید';
-              }
-              return null;
-            },
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
-          const SizedBox(height: 16),
-          if (!_showReset)
-            TextFormField(
-              controller: _passwordController,
-              decoration: const InputDecoration(
-                labelText: 'رمز عبور',
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'لطفاً رمز عبور خود را وارد کنید';
-                }
-                if (value.length < 6) {
-                  return 'رمز عبور باید حداقل ۶ کاراکتر باشد';
-                }
-                return null;
-              },
-            ),
-          const SizedBox(height: 16),
-
-          if (_error != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                border: Border.all(color: Colors.red.shade200),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _error!,
-                style: TextStyle(color: Colors.red.shade700),
-                textAlign: TextAlign.center,
-              ),
-            ),
-
-          if (_success != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                border: Border.all(color: Colors.green.shade200),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _success!,
-                style: TextStyle(color: Colors.green.shade700),
-                textAlign: TextAlign.center,
-              ),
-            ),
-
-          const SizedBox(height: 16),
-
-          if (!_showReset) ...[
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _loading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child:
-                    _loading
-                        ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                        : const Text('ورود'),
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => setState(() => _showReset = true),
-              child: const Text('فراموشی رمز عبور؟'),
-            ),
-          ] else ...[
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _loading ? null : _resetPassword,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child:
-                    _loading
-                        ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                        : const Text('ارسال ایمیل بازنشانی'),
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => setState(() => _showReset = false),
-              child: const Text('بازگشت به ورود'),
-            ),
-          ],
         ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Form(
+        key: _formKey,
+        child: SizedBox(
+          height: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _emailController,
+                decoration: _decoration('ایمیل', icon: Icons.email_outlined),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'لطفاً ایمیل خود را وارد کنید';
+                  }
+                  if (!value.contains('@')) {
+                    return 'لطفاً ایمیل معتبر وارد کنید';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              if (!_showReset)
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: _decoration('رمز عبور', icon: Icons.lock_outline),
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'لطفاً رمز عبور خود را وارد کنید';
+                    }
+                    if (value.length < 6) {
+                      return 'رمز عبور باید حداقل ۶ کاراکتر باشد';
+                    }
+                    return null;
+                  },
+                ),
+              const SizedBox(height: 12),
+
+              if (_error != null)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    border: Border.all(color: Colors.red.shade200),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _error!,
+                    style: TextStyle(color: Colors.red.shade700),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
+              if (_success != null)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    border: Border.all(color: Colors.green.shade200),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _success!,
+                    style: TextStyle(color: Colors.green.shade700),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
+              const SizedBox(height: 12),
+              const Spacer(),
+              // Action buttons at bottom
+              if (!_showReset) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _loading ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child:
+                        _loading
+                            ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : const Text('ورود'),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => setState(() => _showReset = true),
+                  child: const Text('فراموشی رمز عبور؟'),
+                ),
+              ] else ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _loading ? null : _resetPassword,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child:
+                        _loading
+                            ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : const Text('ارسال ایمیل بازنشانی'),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => setState(() => _showReset = false),
+                  child: const Text('بازگشت به ورود'),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

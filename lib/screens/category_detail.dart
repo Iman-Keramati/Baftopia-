@@ -7,6 +7,7 @@ import 'package:baftopia/widgets/floating_button.dart';
 import 'package:baftopia/widgets/product_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:baftopia/provider/user_provider.dart';
 
 class CategoryDetailScreen extends ConsumerWidget {
   const CategoryDetailScreen({super.key, required this.category});
@@ -15,6 +16,7 @@ class CategoryDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productsAsync = ref.watch(productProvider);
+    final userState = ref.watch(userProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -23,77 +25,79 @@ class CategoryDetailScreen extends ConsumerWidget {
           children: [Text(category.title)],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () async {
-              final updatedCategory = await showModalBottomSheet<Category>(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (ctx) {
-                  return DraggableScrollableSheet(
-                    expand: false,
-                    initialChildSize: 0.8,
-                    minChildSize: 0.3,
-                    maxChildSize: 0.95,
-                    builder:
-                        (_, controller) => Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).dialogBackgroundColor,
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(20),
+          if (userState.isAdmin)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () async {
+                final updatedCategory = await showModalBottomSheet<Category>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (ctx) {
+                    return DraggableScrollableSheet(
+                      expand: false,
+                      initialChildSize: 0.8,
+                      minChildSize: 0.3,
+                      maxChildSize: 0.95,
+                      builder:
+                          (_, controller) => Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).dialogBackgroundColor,
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(20),
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(16),
+                            child: ListView(
+                              controller: controller,
+                              children: [
+                                Directionality(
+                                  textDirection: TextDirection.rtl,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'ویرایش دسته‌بندی',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        icon: const Icon(Icons.close),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                AddCategory(category: category),
+                              ],
                             ),
                           ),
-                          padding: const EdgeInsets.all(16),
-                          child: ListView(
-                            controller: controller,
-                            children: [
-                              Directionality(
-                                textDirection: TextDirection.rtl,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text(
-                                      'ویرایش دسته‌بندی',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      icon: const Icon(Icons.close),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              AddCategory(category: category),
-                            ],
-                          ),
-                        ),
-                  );
-                },
-              );
-
-              if (updatedCategory != null) {
-                // If we got an updated category, pop the detail screen and push a new one
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder:
-                        (ctx) =>
-                            CategoryDetailScreen(category: updatedCategory),
-                  ),
+                    );
+                  },
                 );
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => deleteCategoryHandler(context, ref, category),
-          ),
+
+                if (updatedCategory != null) {
+                  // If we got an updated category, pop the detail screen and push a new one
+                  Navigator.of(context).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder:
+                          (ctx) =>
+                              CategoryDetailScreen(category: updatedCategory),
+                    ),
+                  );
+                }
+              },
+            ),
+          if (userState.isAdmin)
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => deleteCategoryHandler(context, ref, category),
+            ),
         ],
       ),
       body: productsAsync.when(

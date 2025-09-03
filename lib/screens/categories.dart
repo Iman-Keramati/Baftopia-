@@ -10,88 +10,72 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../provider/user_provider.dart';
 
 class CategoriesScreen extends ConsumerWidget {
-  const CategoriesScreen({super.key});
+  final bool embedded;
+
+  const CategoriesScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(categoryProvider);
     final scaffoldKey = GlobalKey<ScaffoldState>();
 
+    final Widget body = categoriesAsync.when(
+      data:
+          (categories) =>
+              categories.isNotEmpty
+                  ? GridView.builder(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    itemCount: categories.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 0,
+                          mainAxisSpacing: 0,
+                        ),
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+                      return CategoryItem(category: category);
+                    },
+                  )
+                  : const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'هیچ دسته بندی وجود ندارد',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'برای افزودن دسته‌بندی جدید، روی دکمه + بالای صفحه بزنید',
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) {
+        print('Error: $error');
+        return Center(child: Text('Error: $error'));
+      },
+    );
+
+    if (embedded) {
+      return body;
+    }
+
     return Scaffold(
-      floatingActionButton: FloatingButton(
-        onPressed: () async {
-          await showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (ctx) => const AddContentSheet(),
-          );
-        },
-        tooltip: 'افزودن بافتنی جدید',
-      ),
       key: scaffoldKey,
       drawer: const SideMenu(),
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.person_outlined),
-          onPressed: () {
-            scaffoldKey.currentState?.openDrawer();
-          },
-        ),
-        actions: [
-          Consumer(
-            builder: (context, ref, _) {
-              final userState = ref.watch(userProvider);
-
-              // فقط اگر admin هست، دکمه + نمایش داده بشه
-              if (userState.isAdmin) {
-                return IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () async {
-                    final result = await showModalBottomSheet<bool>(
-                      context: context,
-                      isScrollControlled: true,
-                      builder: (ctx) => AddCategory(modalContext: ctx),
-                    );
-
-                    if (result == true) {
-                      ref.invalidate(categoryProvider);
-                    }
-                  },
-                );
-              }
-
-              return const SizedBox.shrink();
-            },
-          ),
-          Consumer(
-            builder: (context, ref, _) {
-              final userState = ref.watch(userProvider);
-
-              return IconButton(
-                icon: const Icon(Icons.favorite_outline_outlined),
-                onPressed: () {
-                  if (!userState.isLoggedIn) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          textAlign: TextAlign.right,
-                          'برای مشاهده علاقه‌مندی‌ها باید وارد شوید',
-                        ),
-                      ),
-                    );
-                  } else {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const FavoritesScreen(),
-                      ),
-                    );
-                  }
-                },
-              );
-            },
-          ),
-        ],
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -104,52 +88,42 @@ class CategoriesScreen extends ConsumerWidget {
           ],
         ),
         centerTitle: true,
+        actions: [
+          Consumer(
+            builder: (context, ref, _) {
+              final userState = ref.watch(userProvider);
+              if (userState.isAdmin) {
+                return IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () async {
+                    final result = await showModalBottomSheet<bool>(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (ctx) => AddCategory(modalContext: ctx),
+                    );
+                    if (result == true) {
+                      ref.invalidate(categoryProvider);
+                    }
+                  },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
       ),
-
-      body: categoriesAsync.when(
-        data:
-            (categories) =>
-                categories.isNotEmpty
-                    ? GridView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: categories.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                          ),
-                      itemBuilder: (context, index) {
-                        final category = categories[index];
-                        return CategoryItem(category: category);
-                      },
-                    )
-                    : const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'هیچ دسته بندی وجود ندارد',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            'برای افزودن دسته‌بندی جدید، روی دکمه + بالای صفحه بزنید',
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) {
-          print('Error: $error');
-          return Center(child: Text('Error: $error'));
+      floatingActionButton: FloatingButton(
+        onPressed: () async {
+          await showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (ctx) => const AddContentSheet(),
+          );
         },
+        tooltip: 'افزودن بافتنی جدید',
       ),
+      body: body,
     );
   }
 }

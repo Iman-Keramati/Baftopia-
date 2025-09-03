@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:transparent_image/transparent_image.dart';
+import 'package:baftopia/provider/user_provider.dart';
 
 class ProductCard extends ConsumerStatefulWidget {
   const ProductCard({super.key, required this.product});
@@ -125,71 +126,97 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                       );
                     },
                   ),
-                  const SizedBox(width: 6),
-                  _ActionBadge(
-                    icon: Icons.edit,
-                    color: Theme.of(context).colorScheme.primary,
-                    onPressed: () async {
-                      await showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (ctx) {
-                          return DraggableScrollableSheet(
-                            expand: false,
-                            initialChildSize: 0.8,
-                            minChildSize: 0.3,
-                            maxChildSize: 0.95,
-                            builder:
-                                (_, controller) => Container(
-                                  decoration: BoxDecoration(
-                                    color:
-                                        Theme.of(context).dialogBackgroundColor,
-                                    borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(20),
-                                    ),
-                                  ),
-                                  padding: const EdgeInsets.all(16),
-                                  child: ListView(
-                                    controller: controller,
-                                    children: [
-                                      Directionality(
-                                        textDirection: TextDirection.rtl,
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            const Text(
-                                              'ویرایش بافتنی',
-                                              style: TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final userState = ref.watch(userProvider);
+                      if (!userState.isAdmin) return const SizedBox.shrink();
+                      return Row(
+                        children: [
+                          const SizedBox(width: 6),
+                          _ActionBadge(
+                            icon: Icons.edit,
+                            color: Theme.of(context).colorScheme.primary,
+                            onPressed: () async {
+                              await showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (ctx) {
+                                  return DraggableScrollableSheet(
+                                    expand: false,
+                                    initialChildSize: 0.8,
+                                    minChildSize: 0.3,
+                                    maxChildSize: 0.95,
+                                    builder:
+                                        (_, controller) => Container(
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).dialogBackgroundColor,
+                                            borderRadius:
+                                                const BorderRadius.vertical(
+                                                  top: Radius.circular(20),
+                                                ),
+                                          ),
+                                          padding: const EdgeInsets.all(16),
+                                          child: ListView(
+                                            controller: controller,
+                                            children: [
+                                              Directionality(
+                                                textDirection:
+                                                    TextDirection.rtl,
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    const Text(
+                                                      'ویرایش بافتنی',
+                                                      style: TextStyle(
+                                                        fontSize: 20,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    IconButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            context,
+                                                          ),
+                                                      icon: const Icon(
+                                                        Icons.close,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            IconButton(
-                                              onPressed:
-                                                  () => Navigator.pop(context),
-                                              icon: const Icon(Icons.close),
-                                            ),
-                                          ],
+                                              const SizedBox(height: 16),
+                                              AddProduct(
+                                                product: widget.product,
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      AddProduct(product: widget.product),
-                                    ],
-                                  ),
-                                ),
-                          );
-                        },
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 6),
+                          _ActionBadge(
+                            icon: Icons.delete,
+                            color: Colors.red,
+                            onPressed: () {
+                              deleteProductHandler(
+                                context,
+                                ref,
+                                widget.product,
+                              );
+                            },
+                          ),
+                        ],
                       );
-                    },
-                  ),
-                  const SizedBox(width: 6),
-                  _ActionBadge(
-                    icon: Icons.delete,
-                    color: Colors.red,
-                    onPressed: () {
-                      deleteProductHandler(context, ref, widget.product);
                     },
                   ),
                 ],

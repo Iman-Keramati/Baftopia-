@@ -38,7 +38,7 @@ class AppTheme {
       ),
 
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AppConstants.primaryColor,
+        backgroundColor: AppConstants.textColor,
         foregroundColor: Colors.white,
         elevation: 4,
         shape: CircleBorder(),
@@ -120,7 +120,7 @@ class AppTheme {
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppConstants.primaryColor,
+          backgroundColor: AppConstants.textColor,
           foregroundColor: Colors.white,
           elevation: 2,
           shape: RoundedRectangleBorder(
