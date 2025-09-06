@@ -10,13 +10,33 @@ import 'package:transparent_image/transparent_image.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:baftopia/provider/user_provider.dart';
 
-class ProductDetail extends ConsumerWidget {
+class ProductDetail extends ConsumerStatefulWidget {
   const ProductDetail({super.key, required this.product});
 
   final ProductModel product;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProductDetail> createState() => _ProductDetailState();
+}
+
+class _ProductDetailState extends ConsumerState<ProductDetail> {
+  late PageController _pageController;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     Difficulty difficultyFromString(String value) {
       return Difficulty.values.firstWhere(
         (d) => d.name == value,
@@ -25,11 +45,14 @@ class ProductDetail extends ConsumerWidget {
     }
 
     final favorites = ref.watch(favoritesProvider);
-    final isFavorite = favorites.any((item) => item.id == product.id);
+    final isFavorite = favorites.any((item) => item.id == widget.product.id);
     print('is favorite$isFavorite');
     final userState = ref.watch(userProvider);
 
-    final images = product.images.isNotEmpty ? product.images : [product.image];
+    final images =
+        widget.product.images.isNotEmpty
+            ? widget.product.images
+            : [widget.product.image];
 
     return Scaffold(
       appBar: AppBar(
@@ -55,10 +78,10 @@ class ProductDetail extends ConsumerWidget {
               }
               await ref
                   .read(favoritesProvider.notifier)
-                  .toggleFavorite(product.id);
+                  .toggleFavorite(widget.product.id);
               final nowFavorite = ref
                   .read(favoritesProvider)
-                  .any((item) => item.id == product.id);
+                  .any((item) => item.id == widget.product.id);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
@@ -119,7 +142,7 @@ class ProductDetail extends ConsumerWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                AddProduct(product: product),
+                                AddProduct(product: widget.product),
                               ],
                             ),
                           ),
@@ -142,7 +165,8 @@ class ProductDetail extends ConsumerWidget {
           if (userState.isAdmin)
             IconButton(
               icon: const Icon(Icons.delete),
-              onPressed: () => deleteProductHandler(context, ref, product),
+              onPressed:
+                  () => deleteProductHandler(context, ref, widget.product),
             ),
         ],
       ),
@@ -152,34 +176,67 @@ class ProductDetail extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              SizedBox(
-                height: 350,
-                width: double.infinity,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.brown.withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: PageView.builder(
-                      itemCount: images.length,
-                      itemBuilder:
-                          (_, i) => FadeInImage(
-                            placeholder: MemoryImage(kTransparentImage),
-                            image: NetworkImage(images[i]),
-                            fit: BoxFit.cover,
-                            width: double.infinity,
+              Column(
+                children: [
+                  SizedBox(
+                    height: 350,
+                    width: double.infinity,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.brown.withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
                           ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: PageView.builder(
+                          controller: _pageController,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _currentPage = index;
+                            });
+                          },
+                          itemCount: images.length,
+                          itemBuilder:
+                              (_, i) => FadeInImage(
+                                placeholder: MemoryImage(kTransparentImage),
+                                image: NetworkImage(images[i]),
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                              ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  if (images.length > 1) ...[
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        images.length,
+                        (index) => Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color:
+                                _currentPage == index
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(
+                                      context,
+                                    ).colorScheme.primary.withOpacity(0.3),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
               const SizedBox(height: 16),
               Row(
@@ -197,7 +254,9 @@ class ProductDetail extends ConsumerWidget {
                     child: Row(
                       children: [
                         Icon(
-                          difficultyFromString(product.difficultyLevel).icon,
+                          difficultyFromString(
+                            widget.product.difficultyLevel,
+                          ).icon,
                           color:
                               Theme.of(
                                 context,
@@ -207,7 +266,7 @@ class ProductDetail extends ConsumerWidget {
                         const SizedBox(width: 4),
                         Text(
                           difficultyFromString(
-                            product.difficultyLevel,
+                            widget.product.difficultyLevel,
                           ).persianLabel,
                           style: TextStyle(
                             color:
@@ -221,7 +280,7 @@ class ProductDetail extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    product.title,
+                    widget.product.title,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSecondary,
                       fontSize: 32,
@@ -238,7 +297,7 @@ class ProductDetail extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text(product.date.toJalali().formatFullDate()),
+                      Text(widget.product.date.toJalali().formatFullDate()),
                       Icon(Icons.calendar_month),
                     ],
                   ),
@@ -246,14 +305,14 @@ class ProductDetail extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text('مدت زمان بافت:  ${product.timeSpent}'),
+                      Text('مدت زمان بافت:  ${widget.product.timeSpent}'),
                       Icon(Icons.timer_rounded),
                     ],
                   ),
                 ],
               ),
               const SizedBox(height: 20),
-              Text(product.description),
+              Text(widget.product.description),
             ],
           ),
         ),

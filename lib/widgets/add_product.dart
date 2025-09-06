@@ -8,6 +8,7 @@ import 'package:baftopia/provider/category_provider.dart';
 import 'package:baftopia/provider/product_provider.dart';
 import 'package:baftopia/widgets/multi_image_input.dart';
 import 'package:baftopia/widgets/persian_date_picker.dart';
+import 'package:baftopia/widgets/empty_state_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shamsi_date/shamsi_date.dart';
@@ -393,9 +394,12 @@ class _AddProductState extends ConsumerState<AddProduct> {
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => EmptyStateWidgets.loadingState(),
       error:
-          (error, stack) => Center(child: Text('خطا در بارگذاری دسته بندی‌ها')),
+          (error, stack) => EmptyStateWidgets.errorState(
+            errorMessage: 'خطا در بارگذاری دسته‌بندی‌ها',
+            onRetryPressed: () => ref.invalidate(categoryProvider),
+          ),
     );
   }
 }

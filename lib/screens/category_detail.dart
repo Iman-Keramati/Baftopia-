@@ -5,6 +5,7 @@ import 'package:baftopia/widgets/add_category.dart';
 import 'package:baftopia/widgets/add_content_sheet.dart';
 import 'package:baftopia/widgets/floating_button.dart';
 import 'package:baftopia/widgets/product_card.dart';
+import 'package:baftopia/widgets/empty_state_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:baftopia/provider/user_provider.dart';
@@ -101,16 +102,29 @@ class CategoryDetailScreen extends ConsumerWidget {
         ],
       ),
       body: productsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => EmptyStateWidgets.loadingState(),
         error: (error, _) {
-          return Center(child: Text('خطا در بارگذاری محصولات: $error'));
+          return EmptyStateWidgets.errorState(
+            errorMessage: 'خطا در بارگذاری محصولات',
+            onRetryPressed: () => ref.invalidate(productProvider),
+          );
         },
         data: (products) {
           final filteredProducts =
               products.where((p) => p.category.id == category.id).toList();
           if (filteredProducts.isEmpty) {
-            return const Center(
-              child: Text('بافتنی ای در این دسته بندی وجود ندارد'),
+            return EmptyStateWidgets.productsEmpty(
+              categoryName: category.title,
+              onAddPressed: () async {
+                await showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (ctx) => AddContentSheet(initialCategory: category),
+                );
+              },
+              showAction: true,
+              isAdmin: userState.isAdmin,
             );
           }
 

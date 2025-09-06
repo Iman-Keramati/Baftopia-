@@ -1,10 +1,10 @@
 import 'package:baftopia/provider/category_provider.dart';
-import 'package:baftopia/screens/favorites.dart';
 import 'package:baftopia/widgets/add_category.dart';
 import 'package:baftopia/widgets/category_item.dart';
 import 'package:baftopia/widgets/floating_button.dart';
 import 'package:baftopia/widgets/side_menu.dart';
 import 'package:baftopia/widgets/add_content_sheet.dart';
+import 'package:baftopia/widgets/empty_state_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../provider/user_provider.dart';
@@ -41,30 +41,26 @@ class CategoriesScreen extends ConsumerWidget {
                       return CategoryItem(category: category);
                     },
                   )
-                  : const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'هیچ دسته بندی وجود ندارد',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        Text(
-                          'برای افزودن دسته‌بندی جدید، روی دکمه + بالای صفحه بزنید',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
+                  : EmptyStateWidgets.categoriesEmpty(
+                    onAddPressed: () async {
+                      final result = await showModalBottomSheet<bool>(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (ctx) => AddCategory(modalContext: ctx),
+                      );
+                      if (result == true) {
+                        ref.invalidate(categoryProvider);
+                      }
+                    },
+                    showAction: true,
                   ),
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => EmptyStateWidgets.loadingState(),
       error: (error, stack) {
         print('Error: $error');
-        return Center(child: Text('Error: $error'));
+        return EmptyStateWidgets.errorState(
+          errorMessage: 'خطا در بارگذاری دسته‌بندی‌ها',
+          onRetryPressed: () => ref.invalidate(categoryProvider),
+        );
       },
     );
 

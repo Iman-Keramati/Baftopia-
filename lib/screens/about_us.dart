@@ -1,6 +1,6 @@
-import 'package:baftopia/models/product.dart';
 import 'package:baftopia/provider/product_provider.dart';
 import 'package:baftopia/screens/product_detail.dart';
+import 'package:baftopia/widgets/empty_state_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -210,13 +210,13 @@ class AboutUsScreen extends ConsumerWidget {
                           builder: (context, ref, _) {
                             final productsAsync = ref.watch(productProvider);
                             return productsAsync.when(
-                              loading:
-                                  () => const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
+                              loading: () => EmptyStateWidgets.loadingState(),
                               error:
-                                  (e, _) =>
-                                      Center(child: Text('خطا در بارگذاری')),
+                                  (e, _) => EmptyStateWidgets.errorState(
+                                    errorMessage: 'خطا در بارگذاری محصولات',
+                                    onRetryPressed:
+                                        () => ref.invalidate(productProvider),
+                                  ),
                               data: (products) {
                                 return GridView.builder(
                                   shrinkWrap: true,
