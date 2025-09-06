@@ -1,4 +1,5 @@
 import 'package:baftopia/widgets/product_card.dart';
+import 'package:baftopia/widgets/empty_state_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../provider/favorites_provider.dart';
@@ -14,11 +15,14 @@ class FavoritesScreen extends ConsumerWidget {
 
     final content =
         favorites.isEmpty
-            ? const Center(
-              child: Text(
-                'بافتنی ای هنوز به دلت ننشسته',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+            ? EmptyStateWidgets.favoritesEmpty(
+              onAddPressed: () {
+                // Navigate to categories or main screen
+                if (!embedded) {
+                  Navigator.of(context).pushReplacementNamed('/');
+                }
+              },
+              showAction: !embedded,
             )
             : Directionality(
               textDirection: TextDirection.rtl,
